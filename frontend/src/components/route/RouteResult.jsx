@@ -70,6 +70,7 @@ function altText(main, alt) {
 export default function RouteResult({ routes, activeId, onSelect }) {
   const titleRef = useRef(null)
   useEffect(() => { titleRef.current?.focus() }, [])
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches
   const [view, setView] = useState('opis')
   const [guided, setGuided] = useState(false)
   const [guideIdx, setGuideIdx] = useState(0)
@@ -98,14 +99,16 @@ export default function RouteResult({ routes, activeId, onSelect }) {
         pochodzą z demonstracyjnego importu.
       </p>
 
-      <div className="route-view-toggle" role="group" aria-label="Sposób pokazania trasy">
-        <button type="button" aria-pressed={view === 'opis'} onClick={() => setView('opis')}>
-          Opis
-        </button>
-        <button type="button" aria-pressed={view === 'mapa'} onClick={() => setView('mapa')}>
-          Mapa
-        </button>
-      </div>
+      {!isDesktop && (
+        <div className="route-view-toggle" role="group" aria-label="Sposób pokazania trasy">
+          <button type="button" aria-pressed={view === 'opis'} onClick={() => setView('opis')}>
+            Opis
+          </button>
+          <button type="button" aria-pressed={view === 'mapa'} onClick={() => setView('mapa')}>
+            Mapa
+          </button>
+        </div>
+      )}
 
       {alt && (
         <div className="card alt-route">
@@ -117,7 +120,28 @@ export default function RouteResult({ routes, activeId, onSelect }) {
         </div>
       )}
 
-      {view === 'mapa' ? (
+      {isDesktop ? (
+        <div className="route-result__body">
+          <div>
+            {guided ? (
+              <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={() => setGuided(false)} />
+            ) : (
+              <>
+                <button type="button" className="btn" onClick={() => { setGuided(true); setGuideIdx(0) }}>
+                  Rozpocznij prowadzenie krok po kroku
+                </button>
+                <Steps steps={active.steps} />
+              </>
+            )}
+          </div>
+          <div className="route-result__map">
+            <Suspense fallback={<Loading />}>
+              <LazyMap lines={lines} markers={issueMarkers} label="Mapa wyznaczonej trasy" />
+            </Suspense>
+            <p>Te same informacje są w opisie trasy obok.</p>
+          </div>
+        </div>
+      ) : view === 'mapa' ? (
         <div className="route-map">
           <Suspense fallback={<Loading />}>
             <LazyMap lines={lines} markers={issueMarkers} label="Mapa wyznaczonej trasy" />

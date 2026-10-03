@@ -122,3 +122,18 @@
   gap: var(--space-2);
   margin-top: var(--space-3);
 }
+
+@media (min-width: 1024px) {
+  .route-result__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .route-result__map {
+    position: sticky;
+    top: var(--space-4);
+    height: 70vh;
+  }
+}
