@@ -16,7 +16,7 @@ export default function Layout({ app = false }) {
   useEffect(() => {
     if (first.current) { first.current = false; return }
     window.scrollTo(0, 0)
-    mainRef.current?.focus()
+    mainRef.current?.focus({ preventScroll: true })
   }, [pathname])
 
   return (

@@ -43,6 +43,7 @@
 }
 .param__label {
   font-size: var(--text-lg);
+  text-align: left;
 }
 .param__value {
   font-size: 1.125rem;

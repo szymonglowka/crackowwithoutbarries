@@ -16,6 +16,13 @@ function fieldError(body, field) {
   return <p className="report-field-error" role="alert">{Array.isArray(msgs) ? msgs.join(' ') : String(msgs)}</p>
 }
 
+
+// Field names in DRF 400 responses -> Polish labels for the error summary
+const FIELD_LABELS = {
+  place: 'Miejsce', parameter: 'Parametr', value: 'Nowa wartość', comment: 'Opis',
+  observed_at: 'Data obserwacji', email: 'E-mail',
+}
+
 export default function Report() {
   useDocumentTitle('Zgłoś zmianę')
   const [params] = useSearchParams()
@@ -76,6 +83,10 @@ export default function Report() {
   }
 
   const focusSummary = () => setTimeout(() => summaryRef.current?.focus(), 0)
+  // Server errors arrive after an await; focus the summary once it is rendered
+  useEffect(() => {
+    if (serverErrors) summaryRef.current?.focus()
+  }, [serverErrors])
 
   const validateStep = () => {
     const e = {}
@@ -107,7 +118,6 @@ export default function Report() {
       setDone(true)
     } catch (err) {
       setServerErrors(err.status === 400 && err.body ? err.body : { detail: ['Nie udało się wysłać zgłoszenia. Spróbuj ponownie.'] })
-      focusSummary()
     } finally {
       setSending(false)
     }
@@ -126,7 +136,10 @@ export default function Report() {
     )
   }
 
-  const serverList = serverErrors ? Object.entries(serverErrors).flatMap(([k, v]) => (Array.isArray(v) ? v : [v]).map((m) => `${k}: ${m}`)) : []
+  const serverList = serverErrors
+    ? Object.entries(serverErrors).flatMap(([k, v]) =>
+        (Array.isArray(v) ? v : [v]).map((m) => (FIELD_LABELS[k] ? `${FIELD_LABELS[k]}: ${m}` : m)))
+    : []
 
   return (
     <div className="container page report">

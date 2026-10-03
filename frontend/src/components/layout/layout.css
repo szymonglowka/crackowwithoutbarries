@@ -42,4 +42,4 @@ main:focus { outline: none; }
 .site-footer summary { justify-content: space-between; }
 .site-footer summary::after { content: "+"; font-size: 1.5rem; }
 .site-footer details[open] summary::after { content: "−"; }
-@media (min-width: 1024px) { .site-footer summary::after { content: none; } }
+@media (min-width: 1024px) { .site-footer summary::after, .site-footer details[open] summary::after { content: none; } }

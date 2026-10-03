@@ -28,8 +28,9 @@ export default function ParameterRow({ placeId, param, onConfirm, confirming }) 
         )}
       </td>
       <td className="param__match">
-        <MatchBadge match={param.match} />
-        {param.requirement && <span className="param__req"> ({param.requirement})</span>}
+        {/* "info" = profile doesn't constrain this parameter: no match verdict to show */}
+        {param.match !== 'info' && <MatchBadge match={param.match} />}
+        {param.match !== 'info' && param.requirement && <span className="param__req"> ({param.requirement})</span>}
       </td>
       <td className="param__source">
         {missing ? (
