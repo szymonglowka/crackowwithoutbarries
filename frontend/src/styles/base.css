@@ -69,6 +69,7 @@ img { max-width: 100%; height: auto; }
 .badge--conflicting { color: var(--color-conflict); background: var(--color-conflict-bg); }
 .badge--outdated { color: var(--color-sample); background: var(--color-sample-bg); }
 .badge--sample { color: var(--color-sample); background: var(--color-sample-bg); }
+.badge--muted { color: var(--color-text-muted); background: var(--color-bg); border-style: dashed; }
 
 .notice { padding: var(--space-3); border-radius: var(--radius); border-left: 6px solid; }
 .notice--sample { background: var(--color-sample-bg); border-color: var(--color-sample); color: var(--color-sample); }
