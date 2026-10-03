@@ -160,6 +160,14 @@ def evaluate_parameter(param, facts, profile, today=None):
     else:
         status = primary.reliability
 
+    # 2+ matching user reports are shown as more trustworthy.
+    confirmations = sum(1 for f in current if f.reliability == "user_report"
+                        and str(f.value) == str(primary.value))
+    if confirmations >= 2:
+        extra = f"Potwierdzają to {confirmations} zgłoszenia użytkowników."
+        note = result["sources"][0]["note"]
+        result["sources"][0]["note"] = f"{note} {extra}".strip()
+
     result.update(
         value=primary.value,
         value_display=format_value(param, primary.value),

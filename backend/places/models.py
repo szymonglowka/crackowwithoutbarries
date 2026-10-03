@@ -50,6 +50,31 @@ class Place(models.Model):
         return self.name
 
 
+class Report(models.Model):
+    """User report (no account). Creates a Fact on save. Moderated in admin."""
+
+    STATUS_CHOICES = [("pending", "Oczekujące"), ("accepted", "Zaakceptowane"), ("rejected", "Odrzucone")]
+
+    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="reports")
+    parameter = models.CharField(max_length=50)  # key from catalog.PARAMETERS
+    value = models.JSONField()  # int / float / bool / enum key
+    comment = models.TextField(blank=True)
+    observed_at = models.DateField()
+    email = models.EmailField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    ip_hash = models.CharField(max_length=64, blank=True)
+    fact = models.ForeignKey(
+        "Fact", on_delete=models.SET_NULL, null=True, blank=True, related_name="reports"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Zgłoszenie {self.place} · {self.parameter}={self.value}"
+
+
 class Fact(models.Model):
     """One claim about one parameter of one place, from one source, at one time.
     Facts are append-only: corrections add a new fact, which keeps the full
