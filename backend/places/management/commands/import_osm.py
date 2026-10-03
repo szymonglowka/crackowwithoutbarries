@@ -201,23 +201,35 @@ class Command(BaseCommand):
             assert len(bbox) == 4, 'bbox musi mieć format: south,west,north,east'
             cache_path = Path(opts['cache'])
             if opts['offline']:
-                payload = json.loads(cache_path.read_text())
+                parts = sorted(cache_path.parent.glob(f"{cache_path.stem}_part*.json"))
+                if parts:
+                    elements = []
+                    for part in parts:
+                        elements.extend(json.loads(part.read_text()).get('elements', []))
+                    payload = {'elements': elements}
+                else:
+                    payload = json.loads(cache_path.read_text())
                 self.stdout.write('Tryb offline: używam pamięci podręcznej.')
             else:
-                elements = []
-                raws = []
                 endpoints = [opts['endpoint']] if opts['endpoint'] else None
-                for i, query in enumerate(build_queries(bbox)):
+                queries = build_queries(bbox)
+                elements = []
+                cache_path.parent.mkdir(parents=True, exist_ok=True)
+                for i, query in enumerate(queries):
+                    part = cache_path.parent / f"{cache_path.stem}_part{i}.json"
+                    if part.exists():
+                        self.stdout.write(f'Zapytanie {i + 1}/{len(queries)}: z pamięci.')
+                        elements.extend(json.loads(part.read_text()).get('elements', []))
+                        continue
                     if i:
                         time.sleep(5)  # Overpass: max 1 req/s, bądź miły
-                    raws.append(fetch_overpass(query, None, endpoints))
-                for raw in raws:
+                    raw = fetch_overpass(query, None, endpoints)
+                    part.write_text(json.dumps(raw))
                     elements.extend(raw.get('elements', []))
+                    self.stdout.write(f'Zapytanie {i + 1}/{len(queries)}: '
+                                      f'{len(raw.get("elements", []))} elementów.')
                 payload = {'elements': elements}
-                cache_path.parent.mkdir(parents=True, exist_ok=True)
                 cache_path.write_text(json.dumps(payload))
-                self.stdout.write(f'Pobrano {len(elements)} elementów '
-                                  f'({len(build_queries(bbox))} zapytań).')
         except Exception as exc:  # noqa: BLE001 - keep old data, flag source
             source.status = 'unavailable'
             source.last_error = f'{type(exc).__name__}: {exc}'[:500]
