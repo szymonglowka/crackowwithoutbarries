@@ -11,11 +11,12 @@ export function Loading({ lines = 3 }) {
   )
 }
 
-export function ErrorState({ error, children }) {
+export function ErrorState({ error, children, onRetry }) {
   return (
     <div className="notice notice--warning" role="alert">
       <strong>Nie udało się pobrać danych.</strong>{' '}
       {children ?? (error?.status ? `Serwer odpowiedział błędem ${error.status}.` : 'Sprawdź połączenie z internetem.')}
+      {onRetry && <div><button type="button" className="btn" onClick={onRetry}>Spróbuj ponownie</button></div>}
     </div>
   )
 }
@@ -23,7 +24,7 @@ export function ErrorState({ error, children }) {
 export function Empty({ title = 'Nic nie znaleźliśmy', children }) {
   return (
     <div className="notice notice--info">
-      <strong>{title}</strong>
+      <h2>{title}</h2>
       {children && <div>{children}</div>}
     </div>
   )
