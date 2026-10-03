@@ -15,9 +15,15 @@ import './Place.css'
 function groupCounts(group) {
   const barrier = group.parameters.filter((p) => p.match === 'barrier').length
   const unknown = group.parameters.filter((p) => p.match === 'unknown').length
+  const match = group.parameters.filter((p) => p.match === 'match').length
   const parts = []
   if (barrier > 0) parts.push(`${barrier} ${plural(barrier, 'bariera', 'bariery', 'barier')}`)
   if (unknown > 0) parts.push(`${unknown} brak danych`)
+  if (match > 0) parts.push(`${match} pasuje`)
+  if (parts.length === 0) {
+    const n = group.parameters.length
+    return `${n} ${plural(n, 'parametr', 'parametry', 'parametrów')} (informacyjnie)`
+  }
   return parts.join(' · ')
 }
 
