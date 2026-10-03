@@ -84,9 +84,26 @@ rebases on `main` before merging. Only A1 creates migrations in `places`; only A
 - Respect external API terms: send a descriptive `User-Agent`, cache responses, no hammering
   (Overpass, Nominatim: max 1 req/s).
 
+## Your own stack (parallel worktrees)
+
+Each agent works in its own git worktree with its own `.env` (already set up) that gives it an
+isolated Docker stack — own DB, own ports. Check `.env` for your ports:
+
+| Agent | Frontend | Backend | DB |
+|---|---|---|---|
+| main | 5173 | 8000 | 5432 |
+| A1 | 5174 | 8001 | 5433 |
+| A2 | 5175 | 8002 | 5434 |
+| A3 | 5176 | 8003 | 5435 |
+| A4 | 5177 | 8004 | 5436 |
+
+`docker compose ...` run from your worktree only touches your stack. Never run `docker compose down -v`
+outside your worktree. For a quick frontend build check without Docker: `cd frontend && npx vite build`
+(node_modules is installed on the host in each worktree).
+
 ## Definition of done (check before every merge)
 
-- `docker compose exec frontend npx vite build` passes (then `rm -rf frontend/dist`).
+- `cd frontend && npx vite build` passes (then `rm -rf dist`).
 - `docker compose exec backend python manage.py check` passes; migrations committed.
 - You clicked through your pages in the browser at 375 px and ≥1024 px, using only the keyboard.
 - No console errors. No hardcoded `localhost:8000` in frontend code.

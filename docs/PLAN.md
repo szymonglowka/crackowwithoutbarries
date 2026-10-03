@@ -28,11 +28,10 @@ git worktree add ../bp-a3 -b agent/a3-search
 git worktree add ../bp-a4 -b agent/a4-content
 ```
 
-Docker: run ONE stack from the main checkout for manual testing; agents verify with
-`npx vite build` / `manage.py check` / tests in their own worktree. (Optional: give each worktree its own
-stack with `COMPOSE_PROJECT_NAME=bp-a1` and different ports — usually not worth it.)
-A2 needs to run GraphHopper itself; A1 needs the DB for migrations — they can use the shared stack
-by running commands from their worktree against it, or temporarily point the main stack at their branch.
+Docker: each worktree has its own `.env` with a separate `COMPOSE_PROJECT_NAME` and ports
+(table in `AGENTS.md`), so every agent runs an isolated stack with its own code and database:
+`docker compose up -d --build` inside the worktree. `node_modules` is installed on the host in each
+worktree for fast `npx vite build` checks. Main checkout stays the integration stack (5173/8000).
 
 Prompt to start each agent (replace the ID):
 
