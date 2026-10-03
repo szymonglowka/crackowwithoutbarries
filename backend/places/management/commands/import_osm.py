@@ -149,7 +149,7 @@ def fetch_overpass(query, cache_path=None, endpoints=None, retries=12):
         for attempt in range(retries):
             try:
                 req = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT})
-                with urllib.request.urlopen(req, timeout=120) as resp:
+                with urllib.request.urlopen(req, timeout=60) as resp:
                     raw = resp.read()
                 if cache_path is not None:
                     cache_path.parent.mkdir(parents=True, exist_ok=True)
