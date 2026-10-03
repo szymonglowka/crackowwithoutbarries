@@ -23,6 +23,17 @@ function countText(n) {
   return `Znaleziono ${n} ${plural(n, 'miejsce', 'miejsca', 'miejsc')}`
 }
 
+/** "Sukiennice (przykład): 3 bariery, 4 pasuje" — pinezka mówi o stanie. */
+function markerLabel(r) {
+  if (!r.summary) return r.name
+  const b = r.summary.barrier ?? 0
+  const m = r.summary.match ?? 0
+  const u = r.summary.unknown ?? 0
+  const parts = [`${b} ${plural(b, 'bariera', 'bariery', 'barier')}`, `${m} pasuje`]
+  if (u > 0) parts.push(`${u} brak danych`)
+  return `${r.name}: ${parts.join(', ')}`
+}
+
 export default function Search() {
   useDocumentTitle('Szukaj miejsca')
   const [params, setParams] = useSearchParams()
@@ -39,6 +50,7 @@ export default function Search() {
   const [highlightId, setHighlightId] = useState(null)
   const [selectedId, setSelectedId] = useState(null)
   const [fetch, setFetch] = useState({ status: 'idle', results: [], count: 0, error: null })
+  const [visible, setVisible] = useState(20)
   const [recent] = useState(getRecent)
   const [offline, setOffline] = useState(typeof navigator !== 'undefined' && !navigator.onLine)
   const debounce = useRef(null)
@@ -80,7 +92,13 @@ export default function Search() {
   }
 
   const profileKey = JSON.stringify(profile.values)
+  const showMore = () => {
+    const oldVisible = visible
+    setVisible((v) => v + 20)
+    requestAnimationFrame(() => document.querySelectorAll('.result-card__link')[oldVisible]?.focus())
+  }
   useEffect(() => {
+    setVisible(20)
     if (!urlQ && !urlCat) {
       setFetch({ status: 'idle', results: [], count: 0, error: null })
       return
@@ -121,9 +139,9 @@ export default function Search() {
     )
   }
 
-  const markers = fetch.results
+  const markers = fetch.results.slice(0, visible)
     .filter((r) => r.lat != null && r.lon != null)
-    .map((r) => ({ id: r.id, lat: r.lat, lon: r.lon, label: r.name, match: resultMatch(r) }))
+    .map((r) => ({ id: r.id, lat: r.lat, lon: r.lon, label: markerLabel(r), match: resultMatch(r) }))
   const selected = fetch.results.find((r) => r.id === selectedId)
 
   return (
@@ -242,12 +260,15 @@ export default function Search() {
                   if (li) setHighlightId(Number(li.dataset.placeId))
                 }}
               >
-                {fetch.results.map((r) => (
+                {fetch.results.slice(0, visible).map((r) => (
                   <ResultCard key={r.id} place={r} />
                 ))}
               </ul>
+              {fetch.results.length > visible && (
+                <button type="button" className="btn btn--block" onClick={showMore}>Pokaż więcej ({fetch.results.length - visible})</button>
+              )}
               <div className="search__map">
-                <p className="notice notice--info">Te same wyniki są w widoku listy.</p>
+                <p className="notice notice--info">Na mapie: te same {Math.min(visible, fetch.results.length)} wyniki, co na liście.</p>
                 <Suspense fallback={<Loading lines={2} />}>
                   <LazyMap
                     markers={markers}

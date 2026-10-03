@@ -15,9 +15,15 @@ import './Place.css'
 function groupCounts(group) {
   const barrier = group.parameters.filter((p) => p.match === 'barrier').length
   const unknown = group.parameters.filter((p) => p.match === 'unknown').length
+  const match = group.parameters.filter((p) => p.match === 'match').length
   const parts = []
   if (barrier > 0) parts.push(`${barrier} ${plural(barrier, 'bariera', 'bariery', 'barier')}`)
   if (unknown > 0) parts.push(`${unknown} brak danych`)
+  if (match > 0) parts.push(`${match} pasuje`)
+  if (parts.length === 0) {
+    const n = group.parameters.length
+    return `${n} ${plural(n, 'parametr', 'parametry', 'parametrów')} (informacyjnie)`
+  }
   return parts.join(' · ')
 }
 
@@ -102,12 +108,15 @@ export default function Place() {
   }
 
   const place = state.place
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches
   const hasStale = (place.groups ?? []).some((g) =>
     g.parameters.some((p) => p.status === 'outdated' || (p.sources ?? []).some((s) => s.outdated)),
   )
 
   return (
     <div className="container page place">
+      <div className="place__layout">
+      <div className="place__main">
       {/* 1. back + title + address */}
       <button type="button" className="btn place__back" onClick={() => navigate(-1)}>← Wyniki</button>
       <h1>{place.name}</h1>
@@ -172,6 +181,7 @@ export default function Place() {
                     param={p}
                     onConfirm={confirm.reportsDown ? null : confirmValue}
                     confirming={confirm.key === p.key}
+                    placeIsSample={place.is_sample}
                   />
                 ))}
               </tbody>
@@ -185,33 +195,6 @@ export default function Place() {
           </details>
         )
       })}
-
-      {/* 7. map */}
-      <details className="place__map">
-        <summary>Pokaż na mapie</summary>
-        <Suspense fallback={<Loading lines={2} />}>
-          <LazyMap
-            markers={place.lat != null ? [{ id: place.id, lat: place.lat, lon: place.lon, label: place.name }] : []}
-            label={`Mapa: ${place.name}`}
-          />
-        </Suspense>
-        <p>Wszystkie informacje z mapy są opisane powyżej.</p>
-      </details>
-
-      {/* 8. contact */}
-      <section aria-label="Kontakt">
-        <h2>Kontakt</h2>
-        {hasStale && <p><strong>Zadzwoń przed wizytą</strong> — część danych może być nieaktualna.</p>}
-        <p>
-          {place.phone && <><a href={`tel:${place.phone.replace(/\s/g, '')}`}>{place.phone}</a><br /></>}
-          {place.website && (
-            <a href={place.website} target="_blank" rel="noreferrer">
-              {place.website.replace(/^https?:\/\//, '')}
-            </a>
-          )}
-          {!place.phone && !place.website && 'Brak danych kontaktowych.'}
-        </p>
-      </section>
 
       {/* 9. footer */}
       <footer className="place__footer">
@@ -238,12 +221,42 @@ export default function Place() {
           </p>
         )}
       </footer>
+      </div>
+      <aside className="place__side" aria-label="Mapa i kontakt">
+      {/* 7. map */}
+      <details className="place__map" open={isDesktop}>
+        <summary>Pokaż na mapie</summary>
+        <Suspense fallback={<Loading lines={2} />}>
+          <LazyMap
+            markers={place.lat != null ? [{ id: place.id, lat: place.lat, lon: place.lon, label: `${place.name}: lokalizacja` }] : []}
+            label={`Mapa: ${place.name}`}
+          />
+        </Suspense>
+        <p>Wszystkie informacje z mapy są opisane powyżej.</p>
+      </details>
 
-      {/* 10. sticky report button */}
+      {/* 8. contact */}
+      <section aria-label="Kontakt">
+        <h2>Kontakt</h2>
+        {hasStale && <p><strong>Zadzwoń przed wizytą</strong> — część danych może być nieaktualna.</p>}
+        <p>
+          {place.phone && <><a href={`tel:${place.phone.replace(/\s/g, '')}`}>{place.phone}</a><br /></>}
+          {place.website && (
+            <a href={place.website} target="_blank" rel="noreferrer">
+              {place.website.replace(/^https?:\/\//, '')}
+            </a>
+          )}
+          {!place.phone && !place.website && 'Brak danych kontaktowych.'}
+        </p>
+      </section>
+
+      {/* 10. report button */}
       <div className="place__sticky">
         <Link className="btn btn--primary btn--block" to={`/zglos?place=${place.id}`}>
           Zgłoś zmianę lub błąd
         </Link>
+      </div>
+      </aside>
       </div>
     </div>
   )
