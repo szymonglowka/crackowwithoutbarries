@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "rest_framework_gis",
     "corsheaders",
     "places",
+    "routing",
 ]
 
 MIDDLEWARE = [

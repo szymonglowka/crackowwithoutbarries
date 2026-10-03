@@ -1,8 +1,12 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import PlaceViewSet
+from . import views
 
 router = DefaultRouter()
-router.register("places", PlaceViewSet)
+router.register("places", views.PlaceViewSet, basename="place")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("meta/", views.meta),
+    path("sources/", views.sources),
+] + router.urls
