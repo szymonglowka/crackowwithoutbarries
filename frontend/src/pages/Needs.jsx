@@ -184,11 +184,11 @@ export default function Needs() {
           <p><strong>Sukiennice (przykład)</strong></p>
           {preview?.summary && <MatchSummary summary={preview.summary} />}
           <p><Link to="/miejsce/5">Zobacz pełną kartę</Link></p>
-          {preview?.summary && (
-            <p aria-live="polite">
-              Podgląd zaktualizowany: {preview.summary.match} pasuje, {preview.summary.barrier} {plural(preview.summary.barrier, 'bariera', 'bariery', 'barier')}, {preview.summary.unknown} brak danych.
-            </p>
-          )}
+          <p aria-live="polite">
+            {preview?.summary
+              ? `Podgląd zaktualizowany: ${preview.summary.match} pasuje, ${preview.summary.barrier} ${plural(preview.summary.barrier, 'bariera', 'bariery', 'barier')}, ${preview.summary.unknown} brak danych.`
+              : 'Wczytywanie podglądu…'}
+          </p>
         </aside>
       </div>
 
