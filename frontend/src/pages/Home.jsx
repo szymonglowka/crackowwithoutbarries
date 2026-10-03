@@ -102,9 +102,9 @@ export default function Home() {
       <section aria-labelledby="home-steps-h">
         <h2 id="home-steps-h">Trzy kroki</h2>
         <ol className="home-steps">
-          <li><strong>1.</strong> Powiedz, co jest dla Ciebie barierą — tylko na Twoim urządzeniu.</li>
-          <li><strong>2.</strong> Wyszukaj miejsce albo zaplanuj trasę.</li>
-          <li><strong>3.</strong> Sprawdź konkretne parametry: co pasuje, co jest barierą, czego nie wiemy.</li>
+          <li>Powiedz, co jest dla Ciebie barierą — tylko na Twoim urządzeniu.</li>
+          <li>Wyszukaj miejsce albo zaplanuj trasę.</li>
+          <li>Sprawdź konkretne parametry: co pasuje, co jest barierą, czego nie wiemy.</li>
         </ol>
       </section>
 
