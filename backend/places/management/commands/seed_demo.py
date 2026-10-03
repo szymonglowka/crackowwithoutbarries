@@ -91,12 +91,16 @@ class Command(BaseCommand):
         )
         Source.objects.filter(key="osm").update(last_sync_at=timezone.now())
 
-        Place.objects.filter(is_sample=True).delete()
+        # Upsert by name so sample places keep stable IDs across restarts (links,
+        # "recently viewed", demo script). Only their sample facts are reset -
+        # real user reports on them survive.
         for name, cat, addr, lon, lat, note, phone, web, facts in SAMPLE_PLACES:
-            place = Place.objects.create(
-                name=name, category=cat, address=addr, location=Point(lon, lat),
-                key_note=note, phone=phone, website=web, is_sample=True,
+            place, _ = Place.objects.update_or_create(
+                name=name, is_sample=True,
+                defaults=dict(category=cat, address=addr, location=Point(lon, lat),
+                              key_note=note, phone=phone, website=web),
             )
+            place.facts.filter(is_sample=True).delete()
             Fact.objects.bulk_create([
                 Fact(place=place, parameter=param, value=value, source=sources[src],
                      reliability=sources[src].default_reliability, observed_at=d(days),
@@ -157,6 +161,8 @@ class Command(BaseCommand):
 
     def ensure_owner_confirmation(self, sources):
         """Owner confirmation (sample-labelled) on one real OSM place for the demo."""
+        if Fact.objects.filter(source=sources["owner"], is_sample=True, place__is_sample=False).exists():
+            return  # already done on a previous start - don't add one per restart
         place = Place.objects.filter(is_sample=False, osm_id__isnull=False).exclude(
             facts__source__key="owner").order_by("id").first()
         if place is None:

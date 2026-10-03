@@ -1,9 +1,17 @@
-"""Import Points of Interest from OpenStreetMap (Overpass API) as places + facts.
+"""Import Points of Interest from OpenStreetMap as places + facts.
 
-    python manage.py import_osm [--bbox south,west,north,east] [--offline] [--cache PATH]
+    python manage.py import_osm                      # Geofabrik extract (default)
+    python manage.py import_osm --via overpass       # live Overpass API instead
+    python manage.py import_osm --bbox s,w,n,e --region europe/poland/slaskie   # another city
+
+Two acquisition modes, same mapping:
+- `pbf` (default): download the regional Geofabrik extract once (updated daily),
+  cut the bbox and filter POIs locally with osmium. No dependency on public
+  Overpass servers, which are often overloaded or rate-limited.
+- `overpass`: query the Overpass API directly (small areas, fresher data).
 
 Default bbox covers central Kraków (Stare Miasto, Kazimierz, Podgórze, Kleparz,
-Dworzec). "Add another city" = pass a different --bbox.
+Dworzec). "Add another city" = a different --bbox (+ --region if outside Małopolska).
 
 Mapping OSM tags -> facts lives in TAG_FACTS / SURFACES below (pitch slide).
 Source: `osm`, reliability `open_data`, observed_at = OSM element timestamp.
@@ -12,13 +20,15 @@ Network failures never delete data: Source(osm) becomes "unavailable".
 Raw Overpass responses are cached so re-runs work offline.
 """
 import json
+import subprocess
+import tempfile
 import time
 import urllib.parse
 import urllib.request
 from datetime import date
 from pathlib import Path
 
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
@@ -26,7 +36,11 @@ from places.models import Fact, Place, Source
 
 OVERPASS_URLS = [
     "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
 ]
+GEOFABRIK_URL = "https://download.geofabrik.de/{region}-latest.osm.pbf"
+DEFAULT_REGION = "europe/poland/malopolskie"
+PBF_DIR = Path(__file__).resolve().parent.parent.parent / "fixtures" / "pbf"
 USER_AGENT = "BezProgu/1.0 (hackathon accessibility demo; contact: demo@localhost)"
 DEFAULT_BBOX = "50.040,19.910,50.075,19.965"  # south,west,north,east (central Kraków)
 CACHE_PATH = Path(__file__).resolve().parent.parent.parent / "fixtures" / "overpass_cache.json"
@@ -100,7 +114,8 @@ def map_tags(tags):
     for key in ('door:width', 'width'):
         width = to_float(tags.get(key))
         if width is not None:
-            out.append(('door_width_cm', width, ''))
+            # OSM widths are metres by convention ("0.9"); some mappers write cm ("90")
+            out.append(('door_width_cm', round(width * 100) if width < 5 else width, ''))
             break
     if 'step_count' in tags:
         try:
@@ -141,7 +156,7 @@ def build_queries(bbox):
     return queries
 
 
-def fetch_overpass(query, cache_path=None, endpoints=None, retries=12):
+def fetch_overpass(query, cache_path=None, endpoints=None, retries=3):
     """Try mirrors in turn with backoff (public Overpass instances are flaky)."""
     data = urllib.parse.urlencode({"data": query}).encode()
     last_exc = None
@@ -157,8 +172,56 @@ def fetch_overpass(query, cache_path=None, endpoints=None, retries=12):
                 return json.loads(raw)
             except Exception as exc:  # noqa: BLE001 - backoff, then next mirror
                 last_exc = exc
-                time.sleep(10 * (attempt + 1))
+                time.sleep(5 * (attempt + 1))
     raise last_exc
+
+
+def osmium_filters():
+    """POI_FILTERS -> osmium tags-filter expressions (same POIs as the Overpass mode)."""
+    exprs = [f"nwr/{k}={','.join(v)}" for k, v in POI_FILTERS]
+    return exprs + ["nwr/entrance"]
+
+
+def fetch_pbf(bbox, region, stdout):
+    """Elements in Overpass JSON shape, extracted from a Geofabrik .pbf with osmium."""
+    s, w, n, e = bbox
+    pbf = PBF_DIR / f"{region.replace('/', '_')}.osm.pbf"
+    legacy = PBF_DIR / f"{region.rsplit('/', 1)[-1]}-latest.osm.pbf"
+    if not pbf.exists() and legacy.exists():
+        pbf = legacy
+    if not pbf.exists():
+        PBF_DIR.mkdir(parents=True, exist_ok=True)
+        url = GEOFABRIK_URL.format(region=region)
+        stdout.write(f"Pobieram {url} (jednorazowo)...")
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=600) as resp, open(pbf, "wb") as fh:
+            while chunk := resp.read(1 << 20):
+                fh.write(chunk)
+
+    with tempfile.TemporaryDirectory() as tmp:
+        area, pois, out = f"{tmp}/area.pbf", f"{tmp}/pois.pbf", f"{tmp}/pois.geojsonseq"
+        run = lambda *args: subprocess.run(args, check=True, capture_output=True)  # noqa: E731
+        run("osmium", "extract", "-b", f"{w},{s},{e},{n}", str(pbf), "-o", area, "--overwrite")
+        run("osmium", "tags-filter", area, *osmium_filters(), "-o", pois, "--overwrite")
+        run("osmium", "export", pois, "-f", "geojsonseq", "-a", "type,id,timestamp",
+            "-x", "print_record_separator=false", "-o", out, "--overwrite")
+        elements = []
+        with open(out, encoding="utf-8") as fh:
+            for line in fh:
+                feat = json.loads(line)
+                props = dict(feat.get("properties") or {})
+                osm_type, osm_id = props.pop("@type", "node"), props.pop("@id", None)
+                timestamp = props.pop("@timestamp", None)
+                c = GEOSGeometry(json.dumps(feat["geometry"])).point_on_surface
+                el = {"type": osm_type, "id": osm_id, "tags": props, "center": {"lat": c.y, "lon": c.x}}
+                if isinstance(timestamp, int):
+                    el["timestamp"] = date.fromtimestamp(timestamp).isoformat()
+                elif timestamp:
+                    el["timestamp"] = str(timestamp)
+                elements.append(el)
+    # Areas are exported as multipolygons whose id is derived from the way/relation:
+    # osmium uses type "way"/"relation" in @type, so ids stay the real OSM ids.
+    return elements
 
 
 def element_point(el):
@@ -190,6 +253,10 @@ class Command(BaseCommand):
                             help='write dumpdata-style JSON of imported places+facts')
         parser.add_argument('--endpoint', default=None,
                             help='use a single Overpass endpoint URL')
+        parser.add_argument('--via', choices=['pbf', 'overpass'], default='pbf',
+                            help='pbf = Geofabrik extract + osmium (default), overpass = live API')
+        parser.add_argument('--region', default=DEFAULT_REGION,
+                            help='Geofabrik region path for --via pbf, e.g. europe/poland/slaskie')
 
     def handle(self, *args, **opts):
         source, _ = Source.objects.get_or_create(
@@ -200,7 +267,10 @@ class Command(BaseCommand):
             bbox = [p.strip() for p in opts['bbox'].split(',')]
             assert len(bbox) == 4, 'bbox musi mieć format: south,west,north,east'
             cache_path = Path(opts['cache'])
-            if opts['offline']:
+            if opts['via'] == 'pbf' and not opts['offline']:
+                payload = {'elements': fetch_pbf(bbox, opts['region'], self.stdout)}
+                self.stdout.write(f"Ekstrakt Geofabrik: {len(payload['elements'])} elementów.")
+            elif opts['offline']:
                 parts = sorted(cache_path.parent.glob(f"{cache_path.stem}_part*.json"))
                 if parts:
                     elements = []
@@ -238,6 +308,10 @@ class Command(BaseCommand):
             raise SystemExit(1)
 
         elements = payload.get('elements', [])
+        for el in elements:  # public toilets rarely have a name but matter a lot here
+            tags = el.setdefault('tags', {})
+            if tags.get('amenity') == 'toilets' and not tags.get('name'):
+                tags['name'] = 'Toaleta publiczna'
         pois = [el for el in elements if el.get('tags', {}).get('name') and 'entrance' not in el.get('tags', {})]
         entrances = [el for el in elements if 'entrance' in el.get('tags', {})]
 

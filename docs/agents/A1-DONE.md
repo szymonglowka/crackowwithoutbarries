@@ -1,4 +1,4 @@
-# A1 — Data & API: DONE (roboczo)
+# A1 — Data & API: DONE
 
 ## Co działa
 
@@ -44,3 +44,26 @@
 - Throttle raportów: 20/h z IP (AnonRateThrottle `reports`).
 - Nie ruszałem niczego poza `backend/places/**` i dodatkami w `settings.py`
   (`django.contrib.postgres`, throttle rates).
+
+
+## Dokończenie (przejęte przez lead, 03.10)
+
+- **Publiczne serwery Overpass były nieosiągalne** (timeouty na overpass-api.de, kumi, mail.ru),
+  stąd zawieszony import. `import_osm` domyślnie korzysta teraz z **ekstraktu Geofabrik**
+  (`--via pbf`, region `europe/poland/malopolskie`, aktualizowany codziennie): pobiera plik raz,
+  wycina bbox i filtruje POI lokalnie przez `osmium` (dodane do obrazu backendu). Import trwa ~10 s.
+  Overpass dalej dostępny: `--via overpass` (2 serwery, krótsze ponawianie).
+  Kolejne miasto: `--bbox s,w,n,e --region europe/poland/<województwo>`.
+- Wynik: **1951 prawdziwych miejsc** (w tym 65 toalet publicznych), **~470 faktów** z OSM,
+  daty edycji 2014–2026 (stare dane same pokazują się jako „Może być nieaktualne”).
+  Fikstura `places/fixtures/osm_krakow.json` (800 KB) — demo działa bez sieci.
+- Poprawki mapowania: szerokości w metrach → cm (`door:width=0.9` → 90 cm);
+  toalety bez nazwy → „Toaleta publiczna”.
+- `seed_demo`: miejsca przykładowe mają **stałe ID** (upsert po nazwie, resetowane są tylko
+  fakty przykładowe — prawdziwe zgłoszenia zostają); potwierdzenie właściciela dodawane raz,
+  nie przy każdym restarcie.
+- Brak miejsca → 404 (karta i historia), wcześniej 500.
+- Sortowanie „najlepsze dopasowanie”: miejsca z małą ilością danych nigdy nie wyprzedzają
+  udokumentowanych; „najlepiej udokumentowane” liczy też dane z OSM; `near` sortuje w bazie
+  przed limitem wyników.
+- 18 testów (`manage.py test places`), w tym regresje powyższych.

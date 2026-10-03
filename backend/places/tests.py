@@ -176,3 +176,52 @@ class HistoryApiTest(APITestCase):
         self.assertEqual(newest["new_value_display"], "5 cm")
         self.assertEqual(newest["old_value_display"], "2 cm")
         self.assertIsNone(resp.data[1]["old_value_display"])
+
+
+class IntegrationFixesTest(APITestCase):
+    """Regressions found when integrating with the frontend."""
+
+    def test_missing_place_is_404(self):
+        self.assertEqual(self.client.get("/api/places/999999/").status_code, 404)
+        self.assertEqual(self.client.get("/api/places/999999/history/").status_code, 404)
+
+    def test_seed_demo_keeps_sample_ids_and_user_reports(self):
+        from django.core.management import call_command
+        call_command("seed_demo", stdout=open("/dev/null", "w"))
+        ids = dict(Place.objects.filter(is_sample=True).values_list("name", "id"))
+        place = Place.objects.get(id=ids["Sukiennice (przykład)"])
+        Fact.objects.create(place=place, parameter="ramp", value=True, source=Source.objects.get(key="user"),
+                            reliability="user_report", observed_at=date.today())
+        call_command("seed_demo", stdout=open("/dev/null", "w"))
+        self.assertEqual(dict(Place.objects.filter(is_sample=True).values_list("name", "id")), ids)
+        self.assertTrue(place.facts.filter(parameter="ramp", is_sample=False).exists())
+
+    def test_owner_confirmation_added_once(self):
+        from django.core.management import call_command
+        real = Place.objects.create(name="Real", location=Point(19.93, 50.06), osm_type="node", osm_id=1)
+        Fact.objects.create(place=real, parameter="ramp", value=True, source=make_source("osm", "open_data"),
+                            reliability="open_data", observed_at=date.today())
+        Place.objects.create(name="Real 2", location=Point(19.93, 50.06), osm_type="node", osm_id=2)
+        for _ in range(3):
+            call_command("seed_demo", stdout=open("/dev/null", "w"))
+        self.assertEqual(Fact.objects.filter(source__key="owner", place__is_sample=False).count(), 1)
+
+    def test_low_data_places_rank_after_documented(self):
+        osm = make_source("osm", "open_data")
+        sparse = make_place("A sparse")
+        Fact.objects.create(place=sparse, parameter="step_free_entrance", value=True, source=osm,
+                            reliability="open_data", observed_at=date.today())
+        documented = make_place("B documented")
+        for param, value in [("entrance_steps", 2), ("door_width_cm", 90), ("elevator", True), ("accessible_toilet", True)]:
+            Fact.objects.create(place=documented, parameter=param, value=value, source=osm,
+                                reliability="open_data", observed_at=date.today())
+        profile = "max_steps=0&min_door_width_cm=80&needs_elevator=1&needs_accessible_toilet=1"
+        names = [r["name"] for r in self.client.get(f"/api/places/?{profile}").json()["results"]]
+        self.assertLess(names.index("B documented"), names.index("A sparse"))
+
+
+class OsmMappingTest(TestCase):
+    def test_widths_in_metres_become_cm(self):
+        from .management.commands.import_osm import map_tags
+        self.assertIn(("door_width_cm", 90, ""), map_tags({"door:width": "0.9"}))
+        self.assertIn(("door_width_cm", 85.0, ""), map_tags({"door:width": "85"}))

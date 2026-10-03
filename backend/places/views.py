@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 import hashlib
 from datetime import date
 
@@ -104,7 +105,7 @@ def reports(request):
 @api_view(["GET"])
 def place_history(request, pk):
     """Chronological (newest first) list of every fact for the place."""
-    place = Place.objects.prefetch_related("facts__source").get(pk=pk)
+    place = get_object_or_404(Place.objects.prefetch_related("facts__source"), pk=pk)
     facts = sorted(place.facts.all(), key=lambda f: (f.observed_at, f.created_at))
     # previous value of the same parameter (any source) for each fact
     prev_display = {}
@@ -196,6 +197,8 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
                 from django.contrib.gis.geos import Point
                 lat, lon = (float(v) for v in near.split(","))
                 qs = qs.annotate(distance=Distance("location", Point(lon, lat, srid=4326)))
+                # Order in the DB before the result cap, so we keep the nearest places
+                return qs.order_by("distance")
             except (ValueError, TypeError):
                 pass
         return qs.order_by("name")
@@ -223,13 +226,18 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
         if ordering == "distance" and all("distance_m" in r for r in results):
             results.sort(key=lambda r: r["distance_m"])
         elif ordering == "documented":
-            results.sort(key=lambda r: -r["summary"]["confirmed"])
-        else:  # match: fewest barriers, then most matches
-            results.sort(key=lambda r: (r["summary"]["barrier"], -r["summary"]["match"]))
+            # confirmed facts first, then anything known (match or barrier)
+            results.sort(key=lambda r: (-r["summary"]["confirmed"],
+                                        -(r["summary"]["match"] + r["summary"]["barrier"])))
+        else:
+            # match: places we know little about never outrank documented ones
+            # (missing data is not a match), then fewest barriers, most matches
+            results.sort(key=lambda r: (r["low_data"], r["summary"]["barrier"],
+                                        -r["summary"]["match"], r["summary"]["unknown"]))
         return Response({"count": len(results), "results": results})
 
     def retrieve(self, request, pk=None):
-        place = self.get_queryset().get(pk=pk)
+        place = get_object_or_404(self.get_queryset(), pk=pk)
         profile = parse_profile(request.query_params)
         facts = list(place.facts.all())
         groups, summary = evaluate_place(place, profile, facts)

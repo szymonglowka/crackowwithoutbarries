@@ -4,3 +4,8 @@ __pycache__/
 node_modules/
 dist/
 .DS_Store
+
+# OSM extracts (downloaded by import_osm, ~150 MB)
+backend/places/fixtures/pbf/
+# Raw Overpass responses (re-creatable cache)
+backend/places/fixtures/overpass_cache*.json

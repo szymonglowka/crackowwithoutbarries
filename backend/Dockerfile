@@ -5,7 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # GeoDjango system dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends binutils libproj-dev gdal-bin \
+    && apt-get install -y --no-install-recommends binutils libproj-dev gdal-bin osmium-tool \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
