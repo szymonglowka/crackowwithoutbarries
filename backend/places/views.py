@@ -152,6 +152,12 @@ def _place_base(place):
     }
 
 
+def _strip_accents(text):
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", text or "")
+                   if unicodedata.category(c) != "Mn").lower()
+
+
 class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
     """GET /api/places/?q=&category=&<profile fields>  -> list with match summary
     GET /api/places/:id/?<profile fields>              -> full card"""
@@ -160,21 +166,48 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
         qs = Place.objects.prefetch_related(
             Prefetch("facts", queryset=Fact.objects.select_related("source"))
         )
-        q = self.request.query_params.get("q")
+        params = self.request.query_params
+        q = params.get("q")
         if q:
-            qs = qs.filter(Q(name__icontains=q) | Q(address__icontains=q))
-        category = self.request.query_params.get("category")
+            # also match category labels ("muzeum" -> Muzea), accent-insensitive,
+            # in both directions so singular/plural forms hit
+            qn = _strip_accents(q)
+            cats = [key for key, label in catalog.CATEGORIES.items()
+                    if qn in (ln := _strip_accents(label)) or ln in qn
+                    or (len(qn) > 3 and qn[:4] in ln)]
+            qs = qs.filter(Q(name__unaccent__icontains=q) | Q(address__unaccent__icontains=q)
+                           | Q(category__in=cats))
+        category = params.get("category")
         if category:
             qs = qs.filter(category__in=category.split(","))
+        bbox = params.get("bbox")
+        if bbox:
+            try:
+                min_lon, min_lat, max_lon, max_lat = (float(v) for v in bbox.split(","))
+                from django.contrib.gis.geos import Polygon
+                qs = qs.filter(location__within=Polygon.from_bbox(
+                    (min_lon, min_lat, max_lon, max_lat)))
+            except (ValueError, TypeError):
+                pass
+        near = params.get("near")
+        if near:
+            try:
+                from django.contrib.gis.db.models.functions import Distance
+                from django.contrib.gis.geos import Point
+                lat, lon = (float(v) for v in near.split(","))
+                qs = qs.annotate(distance=Distance("location", Point(lon, lat, srid=4326)))
+            except (ValueError, TypeError):
+                pass
         return qs.order_by("name")
 
     def list(self, request):
         profile = parse_profile(request.query_params)
+        ordering = request.query_params.get("ordering", "match")
         results = []
-        for place in self.get_queryset()[:200]:
+        for place in self.get_queryset()[:500]:
             groups, summary = evaluate_place(place, profile, list(place.facts.all()))
             tf = top_fact(groups)
-            results.append({
+            item = {
                 **_place_base(place),
                 "summary": summary,
                 "low_data": summary["unknown"] > (summary["match"] + summary["barrier"]),
@@ -183,7 +216,16 @@ class PlaceViewSet(viewsets.ReadOnlyModelViewSet):
                     "match": tf["match"], "status": tf["status"],
                     "observed_at": tf["sources"][0]["observed_at"],
                 },
-            })
+            }
+            if getattr(place, "distance", None) is not None:
+                item["distance_m"] = round(place.distance.m)
+            results.append(item)
+        if ordering == "distance" and all("distance_m" in r for r in results):
+            results.sort(key=lambda r: r["distance_m"])
+        elif ordering == "documented":
+            results.sort(key=lambda r: -r["summary"]["confirmed"])
+        else:  # match: fewest barriers, then most matches
+            results.sort(key=lambda r: (r["summary"]["barrier"], -r["summary"]["match"]))
         return Response({"count": len(results), "results": results})
 
     def retrieve(self, request, pk=None):

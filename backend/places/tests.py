@@ -116,6 +116,39 @@ class ReportApiTest(APITestCase):
         self.assertEqual(resp.status_code, 400)
 
 
+class SearchApiTest(APITestCase):
+    def setUp(self):
+        self.near_place = Place.objects.create(
+            name="Blisko", category="museum", location=Point(19.9373, 50.0617))
+        self.far_place = Place.objects.create(
+            name="Daleko", category="food", location=Point(19.9461, 50.0515))
+
+    def test_q_matches_category_label(self):
+        resp = self.client.get("/api/places/", {"q": "muzeum"})
+        names = [r["name"] for r in resp.data["results"]]
+        self.assertIn("Blisko", names)
+        self.assertNotIn("Daleko", names)
+
+    def test_q_accent_insensitive(self):
+        resp = self.client.get("/api/places/", {"q": "Gastronomia"})
+        names = [r["name"] for r in resp.data["results"]]
+        self.assertIn("Daleko", names)
+
+    def test_near_adds_distance_and_ordering(self):
+        resp = self.client.get("/api/places/", {
+            "near": "50.0617,19.9373", "ordering": "distance"})
+        self.assertEqual(resp.data["results"][0]["name"], "Blisko")
+        self.assertEqual(resp.data["results"][0]["distance_m"], 0)
+        self.assertGreater(resp.data["results"][1]["distance_m"], 100)
+
+    def test_bbox_filters(self):
+        resp = self.client.get("/api/places/", {
+            "bbox": "19.936,50.060,19.939,50.063"})
+        names = [r["name"] for r in resp.data["results"]]
+        self.assertIn("Blisko", names)
+        self.assertNotIn("Daleko", names)
+
+
 class HistoryApiTest(APITestCase):
     def test_history_order_and_old_values(self):
         place = make_place()
