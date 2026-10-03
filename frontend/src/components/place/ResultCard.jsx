@@ -41,9 +41,9 @@ export default function ResultCard({ place, ...rest }) {
       data-place-id={place.id}
       {...rest}
     >
-      <Link className="result-card__link" to={`/miejsce/${place.id}`} aria-label={`${place.name}, ${place.category_label}`}>
+      <Link className="result-card__link card-link" to={`/miejsce/${place.id}`}>
         <span className="result-card__top">
-          <span className="result-card__name">{place.name}</span>
+          <span className="result-card__name card-link__title">{place.name}</span>
           {place.is_sample && <SampleBadge />}
         </span>
         <span className="result-card__meta">
