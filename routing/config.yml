@@ -1,0 +1,41 @@
+# OWNER: A2. GraphHopper config for wheelchair-friendly pedestrian routing (Krakow).
+# Base profile always excludes steps; per-request custom models (sent by the
+# Django backend) add surface / incline penalties. No CH/LM preparation:
+# per-request custom models need flexible mode.
+graphhopper:
+  datareader.file: /data/malopolskie-latest.osm.pbf
+  graph.location: /data/graph-cache
+  profiles:
+    - name: wheelchair
+      custom_model_files: [wheelchair.json]
+  profiles_ch: []
+  profiles_lm: []
+  graph.encoded_values: foot_access, foot_priority, foot_average_speed, road_class, surface, smoothness
+  prepare.min_network_size: 200
+  prepare.subnetworks.threads: 1
+  routing.snap_preventions_default: tunnel, bridge, ferry
+  datareader.preferred_language: pl
+  import.osm.ignored_highways: motorway,trunk
+
+# NOTE: elevation (srtm) intentionally off for now: without it there is no
+# average_slope detail, so incline issues are omitted from steps. May enable
+# later; see docs/agents/A2-DONE.md.
+
+server:
+  application_connectors:
+  - type: http
+    port: 8989
+    bind_host: 0.0.0.0
+    max_request_header_size: 50k
+  request_log:
+    appenders: []
+  admin_connectors:
+  - type: http
+    port: 8990
+    bind_host: 0.0.0.0
+
+logging:
+  appenders:
+    - type: console
+      time_zone: UTC
+      log_format: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

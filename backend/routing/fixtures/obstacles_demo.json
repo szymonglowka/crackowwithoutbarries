@@ -1,0 +1,48 @@
+# OWNER: Agent A2. Demo kerbs/crossings along Dworzec Główny -> Rynek Główny.
+# Crossing without kerb=* gives the required "Brak danych" demo issue.
+[
+  {
+    "model": "routing.obstacle",
+    "pk": 1,
+    "fields": {
+      "osm_id": 900000001,
+      "kind": "crossing",
+      "location": "SRID=4326;POINT (19.9465 50.0662)",
+      "tags": {"highway": "crossing"},
+      "observed_at": "2026-09-20"
+    }
+  },
+  {
+    "model": "routing.obstacle",
+    "pk": 2,
+    "fields": {
+      "osm_id": 900000002,
+      "kind": "crossing",
+      "location": "SRID=4326;POINT (19.9438 50.0644)",
+      "tags": {"highway": "crossing", "tactile_paving": "yes"},
+      "observed_at": "2026-09-20"
+    }
+  },
+  {
+    "model": "routing.obstacle",
+    "pk": 3,
+    "fields": {
+      "osm_id": 900000003,
+      "kind": "kerb",
+      "location": "SRID=4326;POINT (19.9405 50.0629)",
+      "tags": {"barrier": "kerb", "kerb": "lowered"},
+      "observed_at": "2026-09-21"
+    }
+  },
+  {
+    "model": "routing.obstacle",
+    "pk": 4,
+    "fields": {
+      "osm_id": 900000004,
+      "kind": "kerb",
+      "location": "SRID=4326;POINT (19.9429 50.0637)",
+      "tags": {"barrier": "kerb", "kerb": "raised", "kerb:height": "0.12"},
+      "observed_at": "2026-09-21"
+    }
+  }
+]

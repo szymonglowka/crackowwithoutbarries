@@ -28,6 +28,13 @@ services:
       db:
         condition: service_healthy
 
+  graphhopper:
+    build: ./routing
+    volumes:
+      - gh_data:/data
+    ports:
+      - "${GH_PORT:-8989}:8989"
+
   frontend:
     build: ./frontend
     environment:
@@ -42,3 +49,4 @@ services:
 
 volumes:
   postgres_data:
+  gh_data:
