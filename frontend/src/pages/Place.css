@@ -93,8 +93,7 @@
 }
 
 .place__sticky {
-  position: sticky;
-  bottom: calc(var(--bottom-nav-h) + var(--space-2));
+  position: static;
   padding: var(--space-2) 0;
   background: var(--color-bg);
 }
