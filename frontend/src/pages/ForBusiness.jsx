@@ -4,10 +4,10 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle.js'
 import './ForBusiness.css'
 
 const SEGMENTS = [
-  { name: 'Hotele', points: ['Karta dostępności pokoju i wejścia na stronie rezerwacji — mniej telefonów z pytaniami.', 'Widżet z Twoimi potwierdzonymi danymi, zawsze aktualny.'] },
-  { name: 'Organizatorzy wydarzeń', points: ['Informacja o barierach sali, toalet i dojścia przed zakupem biletu.', 'Mniej reklamacji i zwrotów po wydarzeniu.'] },
-  { name: 'Zarządcy obiektów', points: ['Jeden profil obiektu dla wszystkich najemców i gości.', 'Raport luk w danych: co zmierzyć w pierwszej kolejności.'] },
-  { name: 'Platformy i aplikacje mapowe', points: ['API z parametrami i statusami wiarygodności gotowe do osadzenia.', 'Dane wracają zweryfikowane przez użytkowników.'] },
+  { name: 'Hotele', pitch: 'Pokaż gościom na wózkach, czy wjadą do pokoju i restauracji — zanim zarezerwują.', points: ['Karta dostępności pokoju i wejścia na stronie rezerwacji — mniej telefonów z pytaniami.', 'Widżet z Twoimi potwierdzonymi danymi, zawsze aktualny.'] },
+  { name: 'Organizatorzy wydarzeń', pitch: 'Podaj liczbę stopni do sali, szerokość przejść i dostęp do toalety — w opisie wydarzenia, przed zakupem biletu.', points: ['Informacja o barierach sali, toalet i dojścia przed zakupem biletu.', 'Mniej reklamacji i zwrotów po wydarzeniu.'] },
+  { name: 'Zarządcy obiektów', pitch: 'Jeden profil z parametrami wejść, wind i toalet dla całego budynku — z listą braków do zmierzenia.', points: ['Jeden profil obiektu dla wszystkich najemców i gości.', 'Raport luk w danych: co zmierzyć w pierwszej kolejności.'] },
+  { name: 'Platformy i aplikacje mapowe', pitch: 'Pobierz liczbę stopni, progów i szerokości drzwi z API — z oznaczeniem źródła i daty każdego faktu.', points: ['API z parametrami i statusami wiarygodności gotowe do osadzenia.', 'Dane wracają zweryfikowane przez użytkowników.'] },
 ]
 
 export default function ForBusiness() {
@@ -51,10 +51,13 @@ export default function ForBusiness() {
         <h2 id="segmenty">Dla kogo</h2>
         <div className="biz-grid">
           {SEGMENTS.map((s) => (
-            <details key={s.name} className="card">
-              <summary>{s.name}</summary>
-              <ul>{s.points.map((p, i) => <li key={i}>{p}</li>)}</ul>
-            </details>
+            <div key={s.name} className="card">
+              <p><strong>{s.name}:</strong> {s.pitch}</p>
+              <details>
+                <summary>Szczegóły</summary>
+                <ul>{s.points.map((p, i) => <li key={i}>{p}</li>)}</ul>
+              </details>
+            </div>
           ))}
         </div>
       </section>
