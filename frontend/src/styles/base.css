@@ -81,3 +81,28 @@ img { max-width: 100%; height: auto; }
 .skeleton { background: var(--color-surface); border-radius: var(--radius); min-height: 1.5rem; }
 
 .match-summary { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; padding: 0; margin: var(--space-2) 0; }
+
+/* Disclosure widgets: one consistent, visible expand indicator + 48 px target everywhere.
+   The footer uses its own +/− marker (layout.css), so it is excluded here. */
+details > summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+details > summary::-webkit-details-marker { display: none; }
+details:not(.site-footer__section) > summary::after {
+  content: "";
+  flex-shrink: 0;
+  margin-left: auto;
+  width: 0.55em;
+  height: 0.55em;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  transform: translateY(-25%) rotate(45deg);
+}
+details:not(.site-footer__section)[open] > summary::after {
+  transform: translateY(25%) rotate(-135deg);
+}
