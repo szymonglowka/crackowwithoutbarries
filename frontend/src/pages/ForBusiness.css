@@ -1,4 +1,5 @@
 .biz-grid { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
+.biz-field-error { color: var(--color-barrier); font-weight: 600; margin: var(--space-1) 0 0; }
 .biz-grid summary { font-weight: 700; cursor: pointer; }
 .biz-grid h3 { margin-top: 0; }
 @media (min-width: 600px) { .biz-grid { grid-template-columns: repeat(2, 1fr); } }

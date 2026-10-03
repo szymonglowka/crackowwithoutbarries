@@ -13,6 +13,30 @@ const SEGMENTS = [
 export default function ForBusiness() {
   useDocumentTitle('Dla firm')
   const [sent, setSent] = useState(false)
+  const [bizName, setBizName] = useState('')
+  const [bizEmail, setBizEmail] = useState('')
+  const [bizType, setBizType] = useState('Hotel')
+  const [bizMsg, setBizMsg] = useState('')
+  const [bizErrors, setBizErrors] = useState({})
+
+  const submitBiz = (e) => {
+    e.preventDefault()
+    const errs = {}
+    if (!bizName.trim()) errs.name = 'Podaj imię i nazwisko.'
+    if (!bizEmail.trim()) errs.email = 'Podaj adres e-mail.'
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(bizEmail)) errs.email = 'Podaj poprawny adres e-mail.'
+    if (!bizMsg.trim()) errs.message = 'Wpisz wiadomość.'
+    setBizErrors(errs)
+    const firstKey = ['name', 'email', 'message'].find((k) => errs[k])
+    if (firstKey) {
+      document.getElementById({ name: 'biz-name', email: 'biz-email', message: 'biz-msg' }[firstKey])?.focus()
+      return
+    }
+    const subject = `Współpraca: ${bizType}`
+    const body = [`Imię i nazwisko: ${bizName}`, `E-mail: ${bizEmail}`, `Typ podmiotu: ${bizType}`, '', bizMsg].join('\n')
+    window.location.href = `mailto:partnerzy@bezprogu.pl?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+    setSent(true)
+  }
 
   return (
     <div className="container page content">
@@ -67,19 +91,31 @@ export default function ForBusiness() {
 
       <section aria-labelledby="kontakt">
         <h2 id="kontakt">Kontakt</h2>
-        <form
-          onSubmit={(e) => { e.preventDefault(); setSent(true) }}
-          action="mailto:partnerzy@bezprogu.pl" method="post" encType="text/plain"
-        >
-          <div className="field"><label htmlFor="biz-name">Imię i nazwisko</label><input id="biz-name" name="name" required autoComplete="name" /></div>
-          <div className="field"><label htmlFor="biz-email">E-mail</label><input id="biz-email" name="email" type="email" required autoComplete="email" /></div>
+        <form onSubmit={submitBiz} noValidate>
+          <div className="field">
+            <label htmlFor="biz-name">Imię i nazwisko</label>
+            <input id="biz-name" name="name" value={bizName} onChange={(e) => setBizName(e.target.value)} autoComplete="name"
+              aria-invalid={!!bizErrors.name} aria-describedby={bizErrors.name ? 'biz-name-error' : undefined} />
+            {bizErrors.name && <p className="biz-field-error" id="biz-name-error">{bizErrors.name}</p>}
+          </div>
+          <div className="field">
+            <label htmlFor="biz-email">E-mail</label>
+            <input id="biz-email" name="email" type="email" value={bizEmail} onChange={(e) => setBizEmail(e.target.value)} autoComplete="email"
+              aria-invalid={!!bizErrors.email} aria-describedby={bizErrors.email ? 'biz-email-error' : undefined} />
+            {bizErrors.email && <p className="biz-field-error" id="biz-email-error">{bizErrors.email}</p>}
+          </div>
           <div className="field">
             <label htmlFor="biz-type">Typ podmiotu</label>
-            <select id="biz-type" name="type"><option>Hotel</option><option>Organizator wydarzeń</option><option>Zarządca obiektu</option><option>Platforma / aplikacja</option><option>Inny</option></select>
+            <select id="biz-type" name="type" value={bizType} onChange={(e) => setBizType(e.target.value)}><option>Hotel</option><option>Organizator wydarzeń</option><option>Zarządca obiektu</option><option>Platforma / aplikacja</option><option>Inny</option></select>
           </div>
-          <div className="field"><label htmlFor="biz-msg">Wiadomość</label><textarea id="biz-msg" name="message" rows="4" required /></div>
-          <button type="submit" className="btn btn--primary">Wyślij przez pocztę</button>
-          {sent && <p aria-live="polite">Dziękujemy. Formularz otwiera Twoją aplikację pocztową — wiadomość trafia na partnerzy@bezprogu.pl.</p>}
+          <div className="field">
+            <label htmlFor="biz-msg">Wiadomość</label>
+            <textarea id="biz-msg" name="message" rows="4" value={bizMsg} onChange={(e) => setBizMsg(e.target.value)}
+              aria-invalid={!!bizErrors.message} aria-describedby={bizErrors.message ? 'biz-msg-error' : undefined} />
+            {bizErrors.message && <p className="biz-field-error" id="biz-msg-error">{bizErrors.message}</p>}
+          </div>
+          <button type="submit" className="btn btn--primary">Przygotuj e-mail</button>
+          {sent && <p role="status">Otworzyliśmy Twoją aplikację pocztową z gotową wiadomością. Wyślij ją stamtąd. Jeśli nic się nie otworzyło, napisz na partnerzy@bezprogu.pl.</p>}
         </form>
         <p><a href="/docs/pitch/submission.md">Pobierz opis dla partnerów (PDF w przygotowaniu — tymczasem opis tekstowy)</a></p>
       </section>
