@@ -22,7 +22,7 @@ export default function ParameterRow({ placeId, param, onConfirm, confirming }) 
       <th scope="row" className="param__label">{param.label}</th>
       <td className="param__value">
         {missing ? (
-          <>Brak danych <Link to={`/zglos?place=${placeId}&parameter=${param.key}`}>Pomóż uzupełnić</Link></>
+          <ReliabilityBadge status="missing" />
         ) : (
           <strong>{param.value_display}</strong>
         )}
@@ -34,7 +34,7 @@ export default function ParameterRow({ placeId, param, onConfirm, confirming }) 
       </td>
       <td className="param__source">
         {missing ? (
-          <ReliabilityBadge status="missing" />
+          <Link to={`/zglos?place=${placeId}&parameter=${param.key}`}>Pomóż uzupełnić</Link>
         ) : (
           <>
             <SourceLine s={primary} />
