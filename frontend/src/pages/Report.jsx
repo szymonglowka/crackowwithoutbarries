@@ -6,6 +6,7 @@ import { useMeta } from '../hooks/useMeta.js'
 import { getPlace, searchPlaces } from '../api/places.js'
 import { createReport } from '../api/reports.js'
 import { ErrorState, Loading } from '../components/PageStates.jsx'
+import { formatDate } from '../components/Badges.jsx'
 import './Report.css'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
@@ -98,6 +99,14 @@ const STEP_TITLES = {
   }, [meta, parameters])
 
   const paramDef = parameters.find((p) => p.key === paramKey)
+
+  const formatNewValue = () => {
+    if (newValue === '' || newValue == null) return '—'
+    if (paramDef?.type === 'bool') return newValue === 'tak' || newValue === 'nie' ? newValue : String(newValue)
+    if (paramDef?.type === 'enum' && paramDef.choices) return paramDef.choices[newValue] ?? String(newValue)
+    if ((paramDef?.type === 'int' || paramDef?.type === 'number') && paramDef.unit) return `${newValue} ${paramDef.unit}`
+    return String(newValue)
+  }
 
   // Show current value of the chosen parameter, read-only
   useEffect(() => {
@@ -324,9 +333,9 @@ const STEP_TITLES = {
               <dt>Miejsce</dt><dd>{place?.name ?? `#${placeId}`}</dd>
               <dt>Parametr</dt><dd>{paramDef?.label ?? paramKey}</dd>
               <dt>Obecna wartość</dt><dd>{currentValue || '—'}</dd>
-              <dt>Nowa wartość</dt><dd>{String(newValue)}</dd>
+              <dt>Nowa wartość</dt><dd>{formatNewValue()}</dd>
               {comment && <><dt>Opis</dt><dd>{comment}</dd></>}
-              <dt>Data obserwacji</dt><dd>{observedAt}</dd>
+              <dt>Data obserwacji</dt><dd>{formatDate(observedAt)}</dd>
             </dl>
             <div className="field">
               <label htmlFor="report-email">E-mail do powiadomienia (opcjonalnie)</label>
