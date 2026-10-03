@@ -22,7 +22,7 @@ function parsePoint(raw) {
   if (!raw) return null
   const [lat, lon] = raw.split(',').map(Number)
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null
-  return { label: 'Wybrany punkt', lat, lon }
+  return { label: `Punkt na mapie (${lat.toFixed(4)}, ${lon.toFixed(4)})`, lat, lon }
 }
 
 export default function RoutePlanner() {
