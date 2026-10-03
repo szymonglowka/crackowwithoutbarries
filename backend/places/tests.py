@@ -225,3 +225,23 @@ class OsmMappingTest(TestCase):
         from .management.commands.import_osm import map_tags
         self.assertIn(("door_width_cm", 90, ""), map_tags({"door:width": "0.9"}))
         self.assertIn(("door_width_cm", 85.0, ""), map_tags({"door:width": "85"}))
+
+
+class FixedSampleIdsTest(TestCase):
+    """Sample places must have the same ids on every installation (links in docs/demo)."""
+
+    def test_samples_get_fixed_ids_and_sequence_moves_past_them(self):
+        from django.core.management import call_command
+        call_command("seed_demo", stdout=open("/dev/null", "w"))
+        self.assertEqual(Place.objects.get(pk=1).name, "Sukiennice (przykład)")
+        new = Place.objects.create(name="Nowe miejsce", location=Point(19.93, 50.06))
+        self.assertGreater(new.pk, 4)  # no collision with the pinned sample ids
+
+    def test_sample_created_under_other_id_is_moved_with_its_facts(self):
+        from django.core.management import call_command
+        old = Place.objects.create(pk=50, name="Sukiennice (przykład)", is_sample=True, location=Point(19.93, 50.06))
+        Fact.objects.create(place=old, parameter="ramp", value=True, source=make_source("user", "user_report"),
+                            reliability="user_report", observed_at=date.today())
+        call_command("seed_demo", stdout=open("/dev/null", "w"))
+        self.assertEqual(list(Place.objects.filter(name="Sukiennice (przykład)").values_list("pk", flat=True)), [1])
+        self.assertTrue(Fact.objects.filter(place_id=1, parameter="ramp", is_sample=False).exists())

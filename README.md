@@ -57,7 +57,7 @@ and `seed_demo`, which loads (without network):
 
 - **~1950 real places** from the committed OpenStreetMap snapshot
   (`backend/places/fixtures/osm_krakow.json`),
-- **4 sample places**, all labelled *"Dane przykładowe"*. *Sukiennice (przykład)* (`/miejsce/5`)
+- **4 sample places**, all labelled *"Dane przykładowe"*. *Sukiennice (przykład)* (`/miejsce/1`)
   demonstrates every data state,
 - **sample kerbs and crossings** on the demo route (Kraków Główny → Rynek).
 
@@ -126,7 +126,7 @@ docker compose up --build
 ## Demo path
 
 1. `/` → choose **Wózek** → search **Sukiennice**.
-2. Open **Sukiennice (przykład)** (`/miejsce/5`): barrier (3 steps), alternative entrance, conflicting
+2. Open **Sukiennice (przykład)** (`/miejsce/1`): barrier (3 steps), alternative entrance, conflicting
    threshold data (2 cm vs 5 cm) with *Byłem tam, potwierdzam*, outdated toilet info, missing data.
 3. *Trasa tutaj* → from **Kraków Główny**: step-free route with surface and kerb issues per step;
    toggle cobblestone avoidance to change the route.

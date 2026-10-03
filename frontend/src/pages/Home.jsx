@@ -64,7 +64,7 @@ export default function Home() {
             <li><MatchBadge match="unknown">1 brak danych</MatchBadge></li>
           </ul>
           <p className="home-mock-fact">Wejście główne: 3 stopnie. <strong>Bariera</strong>, potwierdzone 09.2026.</p>
-          <p><Link to="/miejsce/5">Zobacz kartę →</Link></p>
+          <p><Link to="/miejsce/1">Zobacz kartę →</Link></p>
           <p>Dane przykładowe, profil: wózek.</p>
         </div>
       </section>
@@ -73,7 +73,7 @@ export default function Home() {
         <h2 id="home-examples-h">Szybkie przykłady</h2>
         <ul className="home-pills">
           <li><Link className="btn" to="/szukaj?q=Sukiennice">Sukiennice <span className="home-pill-sample">przykład</span></Link></li>
-          <li><Link className="btn" to="/trasa?from=Dworzec+Główny&to=Rynek+Główny">Dworzec → Rynek <span className="home-pill-sample">przykład</span></Link></li>
+          <li><Link className="btn" to="/trasa?from=50.0684238,19.9478862&fromLabel=Krak%C3%B3w+G%C5%82%C3%B3wny&toPlace=1">Dworzec → Rynek <span className="home-pill-sample">przykład</span></Link></li>
           <li><Link className="btn" to="/szukaj?q=Kino+Pod+Baranami">Kino Pod Baranami <span className="home-pill-sample">przykład</span></Link></li>
         </ul>
       </section>

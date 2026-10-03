@@ -11,7 +11,9 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 from django.contrib.gis.geos import GEOSGeometry, Point
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from django.core.management.color import no_style
+from django.db import connection, transaction
 from django.utils import timezone
 
 from places.models import Fact, Place, Source
@@ -91,14 +93,15 @@ class Command(BaseCommand):
             last_error="Przekroczono czas oczekiwania na odpowiedź (przykład)",
         )
 
-        # Upsert by name so sample places keep stable IDs across restarts (links,
-        # "recently viewed", demo script). Only their sample facts are reset -
-        # real user reports on them survive.
-        for name, cat, addr, lon, lat, note, phone, web, facts in SAMPLE_PLACES:
+        # Sample places have FIXED ids (1, 2, 3, ...) on every installation, so links in the
+        # README, demo script, home page and widget demo (/miejsce/1, /widget/1) always work.
+        # Only their sample facts are reset - real user reports on them survive.
+        self.pin_sample_ids()
+        for pk, (name, cat, addr, lon, lat, note, phone, web, facts) in enumerate(SAMPLE_PLACES, start=1):
             place, _ = Place.objects.update_or_create(
-                name=name, is_sample=True,
-                defaults=dict(category=cat, address=addr, location=Point(lon, lat),
-                              key_note=note, phone=phone, website=web),
+                pk=pk,
+                defaults=dict(name=name, is_sample=True, category=cat, address=addr,
+                              location=Point(lon, lat), key_note=note, phone=phone, website=web),
             )
             place.facts.filter(is_sample=True).delete()
             Fact.objects.bulk_create([
@@ -107,9 +110,31 @@ class Command(BaseCommand):
                      note=fnote, is_sample=True)
                 for param, value, src, days, fnote in facts
             ])
+        # Explicit ids don't advance the Postgres sequence: move it past them, otherwise the
+        # next insert (the OSM fixture on a fresh database) would reuse id 1
+        with connection.cursor() as cursor:
+            for sql in connection.ops.sequence_reset_sql(no_style(), [Place]):
+                cursor.execute(sql)
         self.stdout.write(self.style.SUCCESS(f"Seeded {len(SAMPLE_PLACES)} sample places"))
         self.load_osm_fixture(sources)
         self.ensure_owner_confirmation(sources)
+
+    @transaction.atomic
+    def pin_sample_ids(self):
+        """Move sample places created under other ids (older databases) to their fixed id,
+        together with everything that references them."""
+        for pk, entry in enumerate(SAMPLE_PLACES, start=1):
+            name = entry[0]
+            current = Place.objects.filter(name=name, is_sample=True).exclude(pk=pk).first()
+            occupant = Place.objects.filter(pk=pk).exclude(name=name, is_sample=True).first()
+            if occupant:
+                raise CommandError(
+                    f"Id {pk} is reserved for sample place '{name}' but is used by '{occupant.name}'. "
+                    "Reset the database: docker compose down -v && docker compose up --build")
+            if current:
+                for rel in Place._meta.related_objects:  # facts, reports, ...
+                    rel.related_model.objects.filter(**{rel.field.name: current}).update(**{rel.field.name: pk})
+                Place.objects.filter(pk=current.pk).update(id=pk)
 
     def load_osm_fixture(self, sources):
         """Upsert real OSM places+facts from the committed fixture (no network)."""

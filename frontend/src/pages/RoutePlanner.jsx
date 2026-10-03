@@ -63,9 +63,12 @@ export default function RoutePlanner() {
   }, [profile.values])
 
   // Deep links: /trasa?from=lat,lon&to=lat,lon and ?toPlace=<id>.
+  // Optional fromLabel/toLabel give the coordinates a readable name (e.g. "Kraków Główny").
   useEffect(() => {
     const f = parsePoint(params.get('from'))
     const t = parsePoint(params.get('to'))
+    if (f && params.get('fromLabel')) f.label = params.get('fromLabel')
+    if (t && params.get('toLabel')) t.label = params.get('toLabel')
     if (f) {
       setFrom(f)
       setFromText(f.label)

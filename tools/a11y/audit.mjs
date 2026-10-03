@@ -1,7 +1,7 @@
 // Accessibility + UX audit of the running app.
 //
 //   cd tools/a11y && npm install && npm run audit
-//   BASE_URL=http://localhost:5176 npm run audit -- /szukaj /miejsce/5   # other port, selected routes
+//   BASE_URL=http://localhost:5176 npm run audit -- /szukaj /miejsce/1   # other port, selected routes
 //
 // Checks every route at 390 px (phone), 320 px (= 200% zoom reflow, WCAG 1.4.10) and 1280 px:
 //   - axe-core: WCAG 2.0/2.1/2.2 A + AA rules and best practices
@@ -24,9 +24,9 @@ const CHROME = process.env.CHROME_PATH || [
   '/usr/bin/google-chrome', '/usr/bin/chromium', '/usr/bin/chromium-browser',
 ].find((p) => fs.existsSync(p))
 
-const ALL_ROUTES = ['/', '/szukaj', '/szukaj?q=muzeum', '/miejsce/5', '/miejsce/5/historia', '/trasa', '/moje-potrzeby', '/zglos',
-  '/zglos?place=5&parameter=threshold_cm', '/jak-to-dziala', '/dane', '/dla-firm', '/dla-miast', '/faq', '/dostepnosc',
-  '/prywatnosc', '/regulamin', '/licencje', '/widget/5', '/nie-ma-takiej-strony']
+const ALL_ROUTES = ['/', '/szukaj', '/szukaj?q=muzeum', '/miejsce/1', '/miejsce/1/historia', '/trasa', '/moje-potrzeby', '/zglos',
+  '/zglos?place=1&parameter=threshold_cm', '/jak-to-dziala', '/dane', '/dla-firm', '/dla-miast', '/faq', '/dostepnosc',
+  '/prywatnosc', '/regulamin', '/licencje', '/widget/1', '/nie-ma-takiej-strony']
 const routes = process.argv.slice(2).length ? process.argv.slice(2) : ALL_ROUTES
 const VIEWPORTS = [
   { name: 'phone 390', width: 390, height: 844, isMobile: true },

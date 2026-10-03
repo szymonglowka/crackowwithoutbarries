@@ -78,7 +78,7 @@ export default function Needs() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      getPlace(5, draft).then(setPreview).catch(() => {})
+      getPlace(1, draft).then(setPreview).catch(() => {})
     }, 400)
     return () => clearTimeout(t)
   }, [draft])
@@ -183,7 +183,7 @@ export default function Needs() {
           <h2 id="needs-preview-h">Podgląd z Twoimi ustawieniami</h2>
           <p><strong>Sukiennice (przykład)</strong></p>
           {preview?.summary && <MatchSummary summary={preview.summary} />}
-          <p><Link to="/miejsce/5">Zobacz pełną kartę</Link></p>
+          <p><Link to="/miejsce/1">Zobacz pełną kartę</Link></p>
           <p aria-live="polite">
             {preview?.summary
               ? `Podgląd zaktualizowany: ${preview.summary.match} pasuje, ${preview.summary.barrier} ${plural(preview.summary.barrier, 'bariera', 'bariery', 'barier')}, ${preview.summary.unknown} brak danych.`
