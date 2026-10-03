@@ -42,4 +42,7 @@
 @media (min-width: 1024px) {
   .needs .needs-group { max-width: 46rem; }
   .needs-sticky { bottom: var(--space-2); max-width: 46rem; }
+  .needs-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: var(--space-5); align-items: start; }
+  .needs-groups { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .needs-preview { position: sticky; top: var(--space-4); }
 }
