@@ -41,7 +41,8 @@ Nikt nie zmienia: `backend/**`, `frontend/src/App.jsx`, `frontend/src/api/**`, `
 Każdy agent ma własny worktree i własny stos Dockera (porty w `.env`, tabela w `AGENTS.md`).
 
 ```bash
-docker compose up -d --build          # Twój stos (pierwszy start trasy: ok. 5 min)
+docker compose up -d --build db backend frontend   # U1, U2, U4: bez serwisu tras (oszczędza ~2 GB RAM)
+docker compose up -d --build                       # tylko U3: z serwisem tras (GraphHopper)
 cd frontend && npx vite build && rm -rf dist && cd ..
 cd tools/a11y && npm install          # tylko raz
 BASE_URL=http://localhost:<TWÓJ_PORT_FRONTENDU> npm run audit -- <Twoje trasy>
