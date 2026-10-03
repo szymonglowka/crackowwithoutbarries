@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react'
 import { geocode } from '../../api/route.js'
 import './PlaceSearch.css'
 
-export default function PlaceSearch({ id, label, text, onText, onPick }) {
+// `selected` = the point currently chosen for this field (picked or from a deep link).
+// While the text still equals its label there is nothing to search for.
+export default function PlaceSearch({ id, label, text, selected, onText, onPick }) {
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [searching, setSearching] = useState(false)
@@ -11,7 +13,7 @@ export default function PlaceSearch({ id, label, text, onText, onPick }) {
 
   useEffect(() => {
     clearTimeout(timer.current)
-    if (text.trim().length < 2) {
+    if (text.trim().length < 2 || (selected && selected.label === text)) {
       setResults([])
       setOpen(false)
       return undefined
@@ -28,7 +30,7 @@ export default function PlaceSearch({ id, label, text, onText, onPick }) {
       }
     }, 300)
     return () => clearTimeout(timer.current)
-  }, [text])
+  }, [text, selected])
 
   return (
     <div className="place-search">

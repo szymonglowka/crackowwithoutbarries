@@ -55,10 +55,14 @@ function Steps({ steps }) {
 function altText(main, alt) {
   const d = alt.distance_m - main.distance_m
   const len = d > 50 ? `Dłuższa o ${d} m` : d < -50 ? `Krótsza o ${-d} m` : 'Podobnej długości'
-  const cob = alt.summary.difficult_surface < main.summary.difficult_surface
-    ? ', ale omija kostkę'
-    : alt.summary.unknown < main.summary.unknown
-      ? ', ale ma mniej odcinków bez danych'
+  // State exact counts - never claim the alternative "avoids" something it only reduces
+  const a = alt.summary, m = main.summary
+  const cob = a.difficult_surface < m.difficult_surface
+    ? a.difficult_surface === 0
+      ? ', ale omija trudną nawierzchnię'
+      : `, ale ma mniej odcinków trudnej nawierzchni (${a.difficult_surface} zamiast ${m.difficult_surface})`
+    : a.unknown < m.unknown
+      ? `, ale ma mniej miejsc bez danych (${a.unknown} zamiast ${m.unknown})`
       : ''
   return `${len}${cob}.`
 }

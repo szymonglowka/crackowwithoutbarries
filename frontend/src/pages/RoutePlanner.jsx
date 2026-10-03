@@ -152,7 +152,7 @@ export default function RoutePlanner() {
             {formError && (
               <p className="notice notice--warning" role="alert">{formError}</p>
             )}
-            <PlaceSearch id="skad" label="Skąd" text={fromText} onText={(v) => { setFromText(v); setFrom(null) }} onPick={(r) => pick('from', r)} />
+            <PlaceSearch id="skad" label="Skąd" text={fromText} selected={from} onText={(v) => { setFromText(v); setFrom(null) }} onPick={(r) => pick('from', r)} />
             <div className="route-form__row">
               <button type="button" className="btn" onClick={locate}>
                 Moja lokalizacja
@@ -162,7 +162,7 @@ export default function RoutePlanner() {
               </button>
             </div>
             {geoError && <p className="notice notice--warning" role="alert">{geoError}</p>}
-            <PlaceSearch id="dokad" label="Dokąd" text={toText} onText={(v) => { setToText(v); setTo(null) }} onPick={(r) => pick('to', r)} />
+            <PlaceSearch id="dokad" label="Dokąd" text={toText} selected={to} onText={(v) => { setToText(v); setTo(null) }} onPick={(r) => pick('to', r)} />
 
             <details className="route-avoid">
               <summary>Unikaj (schody omijamy zawsze)</summary>

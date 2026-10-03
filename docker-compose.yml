@@ -32,8 +32,9 @@ services:
     build: ./routing
     volumes:
       - gh_data:/data
-    ports:
-      - "${GH_PORT:-8989}:8989"
+    # Not published on the host: the backend reaches it at http://graphhopper:8989,
+    # and parallel worktree stacks would otherwise clash on the port.
+    # Debug: docker compose exec backend curl graphhopper:8989/health
 
   frontend:
     build: ./frontend

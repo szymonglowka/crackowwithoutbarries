@@ -108,10 +108,22 @@ def geocode(request):
     now = time.time()
     cached = _geocode_cache.get(q.lower())
     if cached and cached[0] > now:
-        return Response(results + cached[1])
-    remote = photon_search(q)
-    _geocode_cache[q.lower()] = (now + 3600, remote)
-    return Response(results + remote)
+        remote = cached[1]
+    else:
+        remote = photon_search(q)
+        _geocode_cache[q.lower()] = (now + 3600, remote)
+    return Response(_dedupe(results + remote))
+
+
+def _dedupe(results):
+    """Photon often returns the same name several times (e.g. station platforms)."""
+    seen, out = set(), []
+    for r in results:
+        key = r["label"].lower()
+        if key not in seen:
+            seen.add(key)
+            out.append(r)
+    return out
 
 
 def photon_search(q):
