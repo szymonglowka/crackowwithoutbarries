@@ -1,0 +1,5 @@
+.biz-grid { display: grid; gap: var(--space-2); margin-bottom: var(--space-3); }
+.biz-grid summary { min-height: var(--tap); display: inline-flex; align-items: center; font-weight: 700; cursor: pointer; }
+.biz-grid h3 { margin-top: 0; }
+@media (min-width: 600px) { .biz-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .biz-grid { grid-template-columns: repeat(3, 1fr); } .biz-grid:has(details) { grid-template-columns: repeat(2, 1fr); } }
