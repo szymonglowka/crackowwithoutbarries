@@ -74,6 +74,10 @@ export default function RouteResult({ routes, activeId, onSelect }) {
   const [view, setView] = useState('opis')
   const [guided, setGuided] = useState(false)
   const [guideIdx, setGuideIdx] = useState(0)
+  const exitGuided = () => {
+    setGuided(false)
+    setTimeout(() => titleRef.current?.focus(), 0)
+  }
   const active = routes.find((r) => r.id === activeId) ?? routes[0]
   const alt = routes.find((r) => r.id !== active.id)
 
@@ -124,7 +128,7 @@ export default function RouteResult({ routes, activeId, onSelect }) {
         <div className="route-result__body">
           <div>
             {guided ? (
-              <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={() => setGuided(false)} />
+              <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={exitGuided} />
             ) : (
               <>
                 <button type="button" className="btn" onClick={() => { setGuided(true); setGuideIdx(0) }}>
@@ -149,7 +153,7 @@ export default function RouteResult({ routes, activeId, onSelect }) {
           <p>Te same informacje są w opisie powyżej (przełącz na „Opis”).</p>
         </div>
       ) : guided ? (
-        <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={() => setGuided(false)} />
+        <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={exitGuided} />
       ) : (
         <>
           <button type="button" className="btn" onClick={() => { setGuided(true); setGuideIdx(0) }}>
@@ -163,12 +167,14 @@ export default function RouteResult({ routes, activeId, onSelect }) {
 }
 
 function Guided({ steps, idx, onNav, onExit }) {
+  const headRef = useRef(null)
+  useEffect(() => { headRef.current?.focus() }, [idx])
   const s = steps[idx]
   if (!s) return null
   return (
     <div className="card guided" aria-live="polite">
       <p className="guided__count">Odcinek {idx + 1} z {steps.length}</p>
-      <p className="guided__instruction"><strong>{s.instruction}</strong></p>
+      <h3 className="guided__instruction" tabIndex={-1} ref={headRef}>{s.instruction}</h3>
       <p>{s.distance_m} m · nawierzchnia: {s.surface_display}</p>
       {s.issues.length > 0 && (
         <ul className="step-issues">
@@ -183,7 +189,7 @@ function Guided({ steps, idx, onNav, onExit }) {
           Następny
         </button>
         <button type="button" className="btn" onClick={onExit}>
-          Zakończ
+          Zakończ prowadzenie
         </button>
       </div>
     </div>
