@@ -1,5 +1,5 @@
 // OWNER: A2. Route result: summary, Opis/Mapa toggle, numbered steps, alt route, map.
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { MatchBadge, SampleBadge, formatDate } from '../Badges.jsx'
 import StatusIcon from '../StatusIcon.jsx'
 import { Loading } from '../PageStates.jsx'
@@ -68,9 +68,16 @@ function altText(main, alt) {
 }
 
 export default function RouteResult({ routes, activeId, onSelect }) {
+  const titleRef = useRef(null)
+  useEffect(() => { titleRef.current?.focus() }, [])
+  const isDesktop = window.matchMedia('(min-width: 1024px)').matches
   const [view, setView] = useState('opis')
   const [guided, setGuided] = useState(false)
   const [guideIdx, setGuideIdx] = useState(0)
+  const exitGuided = () => {
+    setGuided(false)
+    setTimeout(() => titleRef.current?.focus(), 0)
+  }
   const active = routes.find((r) => r.id === activeId) ?? routes[0]
   const alt = routes.find((r) => r.id !== active.id)
 
@@ -87,7 +94,8 @@ export default function RouteResult({ routes, activeId, onSelect }) {
 
   return (
     <section aria-label="Wyznaczona trasa">
-      <p className="route-summary" aria-live="polite">
+      <h2 className="route-result__title" tabIndex={-1} ref={titleRef}>Wynik: trasa bez schodów</h2>
+      <p className="route-summary">
         <strong>{active.summary_text}</strong>
       </p>
       <p className="route-source">
@@ -95,14 +103,16 @@ export default function RouteResult({ routes, activeId, onSelect }) {
         pochodzą z demonstracyjnego importu.
       </p>
 
-      <div className="route-view-toggle" role="group" aria-label="Sposób pokazania trasy">
-        <button type="button" aria-pressed={view === 'opis'} onClick={() => setView('opis')}>
-          Opis
-        </button>
-        <button type="button" aria-pressed={view === 'mapa'} onClick={() => setView('mapa')}>
-          Mapa
-        </button>
-      </div>
+      {!isDesktop && (
+        <div className="route-view-toggle" role="group" aria-label="Sposób pokazania trasy">
+          <button type="button" aria-pressed={view === 'opis'} onClick={() => setView('opis')}>
+            Opis
+          </button>
+          <button type="button" aria-pressed={view === 'mapa'} onClick={() => setView('mapa')}>
+            Mapa
+          </button>
+        </div>
+      )}
 
       {alt && (
         <div className="card alt-route">
@@ -114,7 +124,28 @@ export default function RouteResult({ routes, activeId, onSelect }) {
         </div>
       )}
 
-      {view === 'mapa' ? (
+      {isDesktop ? (
+        <div className="route-result__body">
+          <div>
+            {guided ? (
+              <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={exitGuided} />
+            ) : (
+              <>
+                <button type="button" className="btn" onClick={() => { setGuided(true); setGuideIdx(0) }}>
+                  Rozpocznij prowadzenie krok po kroku
+                </button>
+                <Steps steps={active.steps} />
+              </>
+            )}
+          </div>
+          <div className="route-result__map">
+            <Suspense fallback={<Loading />}>
+              <LazyMap lines={lines} markers={issueMarkers} label="Mapa wyznaczonej trasy" />
+            </Suspense>
+            <p>Te same informacje są w opisie trasy obok.</p>
+          </div>
+        </div>
+      ) : view === 'mapa' ? (
         <div className="route-map">
           <Suspense fallback={<Loading />}>
             <LazyMap lines={lines} markers={issueMarkers} label="Mapa wyznaczonej trasy" />
@@ -122,7 +153,7 @@ export default function RouteResult({ routes, activeId, onSelect }) {
           <p>Te same informacje są w opisie powyżej (przełącz na „Opis”).</p>
         </div>
       ) : guided ? (
-        <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={() => setGuided(false)} />
+        <Guided steps={active.steps} idx={guideIdx} onNav={setGuideIdx} onExit={exitGuided} />
       ) : (
         <>
           <button type="button" className="btn" onClick={() => { setGuided(true); setGuideIdx(0) }}>
@@ -136,12 +167,14 @@ export default function RouteResult({ routes, activeId, onSelect }) {
 }
 
 function Guided({ steps, idx, onNav, onExit }) {
+  const headRef = useRef(null)
+  useEffect(() => { headRef.current?.focus() }, [idx])
   const s = steps[idx]
   if (!s) return null
   return (
     <div className="card guided" aria-live="polite">
       <p className="guided__count">Odcinek {idx + 1} z {steps.length}</p>
-      <p className="guided__instruction"><strong>{s.instruction}</strong></p>
+      <h3 className="guided__instruction" tabIndex={-1} ref={headRef}>{s.instruction}</h3>
       <p>{s.distance_m} m · nawierzchnia: {s.surface_display}</p>
       {s.issues.length > 0 && (
         <ul className="step-issues">
@@ -156,7 +189,7 @@ function Guided({ steps, idx, onNav, onExit }) {
           Następny
         </button>
         <button type="button" className="btn" onClick={onExit}>
-          Zakończ
+          Zakończ prowadzenie
         </button>
       </div>
     </div>

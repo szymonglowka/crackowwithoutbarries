@@ -53,6 +53,14 @@
   padding: var(--space-3);
 }
 
+.route-step--match {
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: none;
+  padding: var(--space-2) 0;
+}
+
 .route-step--barrier {
   border-color: var(--color-barrier);
   background: var(--color-barrier-bg);
@@ -113,4 +121,19 @@
   flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-3);
+}
+
+@media (min-width: 1024px) {
+  .route-result__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    align-items: start;
+  }
+
+  .route-result__map {
+    position: sticky;
+    top: var(--space-4);
+    height: 70vh;
+  }
 }

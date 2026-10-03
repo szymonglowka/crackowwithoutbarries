@@ -17,9 +17,6 @@
 }
 
 .route-avoid summary {
-  min-height: var(--tap);
-  display: flex;
-  align-items: center;
   cursor: pointer;
   font-weight: 600;
 }
@@ -34,6 +31,12 @@
 .route-avoid__option input {
   width: 1.5rem;
   height: 1.5rem;
+}
+
+.route-avoid__hint {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
 }
 
 .route-form__submit {

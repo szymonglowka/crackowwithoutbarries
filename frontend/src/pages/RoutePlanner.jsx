@@ -12,17 +12,17 @@ import RouteResult from '../components/route/RouteResult.jsx'
 import './RoutePlanner.css'
 
 const AVOID_OPTIONS = [
-  { key: 'cobblestone', label: 'kostka brukowa' },
-  { key: 'high_kerbs', label: 'wysokie krawężniki' },
-  { key: 'steep', label: 'strome podjazdy' },
-  { key: 'no_data', label: 'odcinki bez danych' },
+  { key: 'cobblestone', label: 'kostka brukowa', hint: 'zmienia przebieg trasy' },
+  { key: 'high_kerbs', label: 'wysokie krawężniki', hint: 'na razie tylko oznaczamy je w opisie trasy' },
+  { key: 'steep', label: 'strome podjazdy', hint: 'brak danych o nachyleniu — jeszcze nie uwzględniamy' },
+  { key: 'no_data', label: 'odcinki bez danych', hint: 'na razie tylko oznaczamy je w opisie trasy' },
 ]
 
 function parsePoint(raw) {
   if (!raw) return null
   const [lat, lon] = raw.split(',').map(Number)
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null
-  return { label: 'Wybrany punkt', lat, lon }
+  return { label: `Punkt na mapie (${lat.toFixed(4)}, ${lon.toFixed(4)})`, lat, lon }
 }
 
 export default function RoutePlanner() {
@@ -139,6 +139,10 @@ export default function RoutePlanner() {
     fetchRoute(from, to, avoid)
   }
 
+  const submitAgain = () => {
+    if (from && to) fetchRoute(from, to, avoid)
+  }
+
   const toggleAvoid = (key) =>
     setAvoid((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
 
@@ -172,8 +176,10 @@ export default function RoutePlanner() {
                     type="checkbox"
                     checked={avoid.includes(o.key)}
                     onChange={() => toggleAvoid(o.key)}
+                    aria-describedby={`avoid-hint-${o.key}`}
                   />
                   {o.label}
+                  <span className="route-avoid__hint" id={`avoid-hint-${o.key}`}>{o.hint}</span>
                 </label>
               ))}
             </details>
@@ -195,6 +201,8 @@ export default function RoutePlanner() {
               <div className="notice notice--warning" ref={errorRef} tabIndex={-1} role="alert">
                 <strong>Usługa wyznaczania tras jest chwilowo niedostępna.</strong>
                 <p>Spróbuj ponownie za chwilę albo zadzwoń do miejsca docelowego i zapytaj o dojście bez schodów.</p>
+                <p>Przy pierwszym uruchomieniu serwis tras przygotowuje mapę (kilka minut).</p>
+                <button type="button" className="btn" onClick={submitAgain}>Spróbuj ponownie</button>
               </div>
             )}
             {state === 'offline' && (
