@@ -7,6 +7,17 @@ import { ReliabilityBadge, SampleBadge, formatDate } from '../components/Badges.
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js'
 import './PlaceHistory.css'
 
+// Kopia etykiet z Badges.jsx (plik agenta U1): badge jest zbędny, gdy źródło
+// nazywa się identycznie (np. „Zgłoszenie użytkownika").
+const RELIABILITY_LABELS = {
+  confirmed: 'Potwierdzone',
+  open_data: 'Z otwartych danych',
+  user_report: 'Zgłoszenie użytkownika',
+  conflicting: 'Sprzeczne',
+  outdated: 'Może być nieaktualne',
+  missing: 'Brak danych',
+}
+
 export default function PlaceHistory() {
   useDocumentTitle('Historia zmian')
   const { id } = useParams()
@@ -63,11 +74,16 @@ export default function PlaceHistory() {
                   <td>{formatDate(h.date)}</td>
                   <td>{h.label ?? h.parameter}</td>
                   <td>
-                    {h.old_value_display ?? '—'} → <strong>{h.new_value_display}</strong>
+                    {h.old_value_display == null ? (
+                      <>Pierwszy wpis: <strong>{h.new_value_display}</strong></>
+                    ) : (
+                      <>{h.old_value_display} <span aria-hidden="true">→</span><span className="visually-hidden">zmiana na</span> <strong>{h.new_value_display}</strong></>
+                    )}
                     {h.note && <><br />{h.note}</>}
                   </td>
                   <td>
-                    {h.source?.name} <ReliabilityBadge status={h.reliability} />
+                    {h.source?.name}{' '}
+                    {RELIABILITY_LABELS[h.reliability] !== h.source?.name && <ReliabilityBadge status={h.reliability} />}
                     {h.is_sample && <> <SampleBadge /></>}
                   </td>
                 </tr>
