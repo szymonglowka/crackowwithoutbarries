@@ -3,15 +3,20 @@ confirmed, open data, user report, conflict, outdated, missing, unavailable sour
 
     python manage.py seed_demo
 
-Idempotent: wipes and recreates sample places only.
+Idempotent: wipes and recreates sample places only; OSM places are upserted
+from places/fixtures/osm_krakow.json when present (offline-friendly demo).
 """
+import json
 from datetime import date, timedelta
+from pathlib import Path
 
-from django.contrib.gis.geos import Point
+from django.contrib.gis.geos import GEOSGeometry, Point
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from places.models import Fact, Place, Source
+
+FIXTURE_PATH = Path(__file__).resolve().parent.parent.parent / "fixtures" / "osm_krakow.json"
 
 SOURCES = [
     dict(key="osm", name="OpenStreetMap", url="https://www.openstreetmap.org",
@@ -99,3 +104,77 @@ class Command(BaseCommand):
                 for param, value, src, days, fnote in facts
             ])
         self.stdout.write(self.style.SUCCESS(f"Seeded {len(SAMPLE_PLACES)} sample places"))
+        self.load_osm_fixture(sources)
+        self.ensure_owner_confirmation(sources)
+
+    def load_osm_fixture(self, sources):
+        """Upsert real OSM places+facts from the committed fixture (no network)."""
+        if not FIXTURE_PATH.exists():
+            self.stdout.write("Brak fikstury OSM — pomijam (uruchom import_osm z siecią).")
+            return
+        entries = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
+        source_by_pk = {e["pk"]: e["fields"] for e in entries if e["model"] == "places.source"}
+        n_places, n_facts = 0, 0
+        for e in entries:
+            if e["model"] == "places.place":
+                f = e["fields"]
+                _, created = Place.objects.update_or_create(
+                    osm_type=f["osm_type"], osm_id=f["osm_id"],
+                    defaults={"name": f["name"], "category": f["category"],
+                              "address": f.get("address", ""),
+                              "location": GEOSGeometry(f["location"]),
+                              "phone": f.get("phone", ""), "website": f.get("website", ""),
+                              "key_note": f.get("key_note", ""), "is_sample": False})
+                n_places += created
+        # facts reference places by pk: map fixture place pk -> db place
+        place_by_fixture_pk = {}
+        for e in entries:
+            if e["model"] == "places.place":
+                obj = Place.objects.get(osm_type=e["fields"]["osm_type"], osm_id=e["fields"]["osm_id"])
+                place_by_fixture_pk[e["pk"]] = obj
+        for e in entries:
+            if e["model"] != "places.fact":
+                continue
+            f = e["fields"]
+            place = place_by_fixture_pk.get(f["place"])
+            if place is None:
+                continue
+            src_key = source_by_pk.get(f["source"], {}).get("key", "osm")
+            source = sources.get(src_key) or Source.objects.filter(key=src_key).first()
+            if source is None:
+                continue
+            latest = (Fact.objects.filter(place=place, parameter=f["parameter"])
+                      .order_by("-observed_at", "-created_at").first())
+            if latest is not None and latest.value == f["value"]:
+                continue
+            Fact.objects.create(place=place, parameter=f["parameter"], value=f["value"],
+                                source=source, reliability=f.get("reliability", "open_data"),
+                                observed_at=date.fromisoformat(f["observed_at"][:10]),
+                                note=f.get("note", ""), is_sample=False)
+            n_facts += 1
+        self.stdout.write(self.style.SUCCESS(
+            f"Fikstura OSM: {n_places} nowych miejsc, {n_facts} nowych faktów"))
+
+    def ensure_owner_confirmation(self, sources):
+        """Owner confirmation (sample-labelled) on one real OSM place for the demo."""
+        place = Place.objects.filter(is_sample=False, osm_id__isnull=False).exclude(
+            facts__source__key="owner").order_by("id").first()
+        if place is None:
+            if Place.objects.filter(is_sample=False).exists():
+                self.stdout.write("Każde miejsce OSM ma już potwierdzenie właściciela.")
+            else:
+                self.stdout.write("Brak miejsc OSM — pomijam potwierdzenie właściciela.")
+            return
+        fact = place.facts.order_by("id").first()
+        if fact is None:
+            self.stdout.write(f"Miejsce {place.name} nie ma faktów — pomijam potwierdzenie.")
+            return
+        if Fact.objects.filter(place=place, parameter=fact.parameter,
+                               source=sources["owner"]).exists():
+            return
+        Fact.objects.create(place=place, parameter=fact.parameter, value=fact.value,
+                            source=sources["owner"], reliability="confirmed",
+                            observed_at=date.today(), is_sample=True,
+                            note="Potwierdzone przez właściciela (przykład)")
+        self.stdout.write(self.style.SUCCESS(
+            f"Potwierdzenie właściciela (przykład) na: {place.name}"))

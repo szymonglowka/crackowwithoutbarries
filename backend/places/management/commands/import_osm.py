@@ -26,8 +26,6 @@ from places.models import Fact, Place, Source
 
 OVERPASS_URLS = [
     "https://overpass-api.de/api/interpreter",
-    "https://overpass.kumi.systems/api/interpreter",
-    "https://overpass.nchc.org.tw/api/interpreter",
 ]
 USER_AGENT = "BezProgu/1.0 (hackathon accessibility demo; contact: demo@localhost)"
 DEFAULT_BBOX = "50.040,19.910,50.075,19.965"  # south,west,north,east (central Kraków)
@@ -143,21 +141,23 @@ def build_queries(bbox):
     return queries
 
 
-def fetch_overpass(query, cache_path=None, endpoints=None):
-    """Try mirrors in turn (public Overpass instances rate-limit aggressively)."""
+def fetch_overpass(query, cache_path=None, endpoints=None, retries=12):
+    """Try mirrors in turn with backoff (public Overpass instances are flaky)."""
     data = urllib.parse.urlencode({"data": query}).encode()
     last_exc = None
     for url in (endpoints or OVERPASS_URLS):
-        try:
-            req = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=120) as resp:
-                raw = resp.read()
-            if cache_path is not None:
-                cache_path.parent.mkdir(parents=True, exist_ok=True)
-                cache_path.write_bytes(raw)
-            return json.loads(raw)
-        except Exception as exc:  # noqa: BLE001 - try next mirror
-            last_exc = exc
+        for attempt in range(retries):
+            try:
+                req = urllib.request.Request(url, data=data, headers={"User-Agent": USER_AGENT})
+                with urllib.request.urlopen(req, timeout=120) as resp:
+                    raw = resp.read()
+                if cache_path is not None:
+                    cache_path.parent.mkdir(parents=True, exist_ok=True)
+                    cache_path.write_bytes(raw)
+                return json.loads(raw)
+            except Exception as exc:  # noqa: BLE001 - backoff, then next mirror
+                last_exc = exc
+                time.sleep(10 * (attempt + 1))
     raise last_exc
 
 

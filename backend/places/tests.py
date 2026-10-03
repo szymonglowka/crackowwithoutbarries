@@ -62,6 +62,15 @@ class MatchingTest(TestCase):
         self.assertEqual(r["status"], "missing")
         self.assertEqual(r["match"], "info")
 
+    def test_two_matching_user_reports_noted(self):
+        today = date.today()
+        facts = [
+            FakeFact(True, 1, "user_report", today, "user", "User"),
+            FakeFact(True, 2, "user_report", today - timedelta(days=1), "user", "User"),
+        ]
+        r = evaluate_parameter(PARAMETERS_BY_KEY["elevator"], facts, {})
+        self.assertIn("2 zgłoszenia", r["sources"][0]["note"])
+
 
 class ReportApiTest(APITestCase):
     def setUp(self):
