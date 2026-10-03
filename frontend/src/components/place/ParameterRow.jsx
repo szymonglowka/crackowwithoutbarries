@@ -78,11 +78,17 @@ function ConfirmButton({ placeId, param, onConfirm, confirming }) {
       </p>
     )
   }
+  // One button per distinct value: the visitor confirms the version they actually saw
+  const versions = [...new Map(param.sources.map((s) => [JSON.stringify(s.value), s])).values()]
   return (
-    <p>
-      <button type="button" className="btn" onClick={() => onConfirm(param)} disabled={confirming}>
-        {confirming ? 'Wysyłanie…' : 'Byłem tam, potwierdzam'}
-      </button>
-    </p>
+    <div className="param__confirm" role="group" aria-label={`Byłem tam — potwierdź: ${param.label}`}>
+      <p><strong>Byłem tam, potwierdzam:</strong></p>
+      {versions.map((s) => (
+        <button key={JSON.stringify(s.value)} type="button" className="btn"
+          onClick={() => onConfirm(param, s.value)} disabled={confirming}>
+          {confirming ? 'Wysyłanie…' : s.value_display}
+        </button>
+      ))}
+    </div>
   )
 }

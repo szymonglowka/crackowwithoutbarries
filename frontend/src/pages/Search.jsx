@@ -1,7 +1,7 @@
 // OWNER: A3 - see docs/agents/A3-search-place.md
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { searchPlaces, sortResults } from '../api/places.js'
+import { searchPlaces } from '../api/places.js'
 import { Loading, ErrorState, Empty } from '../components/PageStates.jsx'
 import ProfileChip from '../components/ProfileChip.jsx'
 import { SampleBadge, plural } from '../components/Badges.jsx'
@@ -96,7 +96,7 @@ export default function Search() {
     })
       .then((data) => {
         if (!live) return
-        setFetch({ status: 'ok', results: sortResults(data.results, ordering), count: data.count, error: null })
+        setFetch({ status: 'ok', results: data.results /* ordered by the API */, count: data.count, error: null })
       })
       .catch((error) => {
         if (live) setFetch({ status: 'error', results: [], count: 0, error })

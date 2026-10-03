@@ -7,7 +7,7 @@ Idempotent: wipes and recreates sample places only; OSM places are upserted
 from places/fixtures/osm_krakow.json when present (offline-friendly demo).
 """
 import json
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
 from django.contrib.gis.geos import GEOSGeometry, Point
@@ -20,7 +20,8 @@ FIXTURE_PATH = Path(__file__).resolve().parent.parent.parent / "fixtures" / "osm
 
 SOURCES = [
     dict(key="osm", name="OpenStreetMap", url="https://www.openstreetmap.org",
-         license="ODbL 1.0", default_reliability="open_data", refresh_policy="co 24 h (Overpass API)"),
+         license="ODbL 1.0", default_reliability="open_data",
+         refresh_policy="co 24 h (ekstrakt Geofabrik, import_osm)"),
     dict(key="krakow_open_data", name="Otwarte Dane Miasta Krakowa", url="https://otwartedane.um.krakow.pl",
          license="CC BY 4.0", default_reliability="open_data", refresh_policy="co tydzień"),
     dict(key="owner", name="Właściciel obiektu", license="Licencja udzielona przy rejestracji",
@@ -89,7 +90,6 @@ class Command(BaseCommand):
             status="unavailable", last_sync_at=timezone.now() - timedelta(days=9),
             last_error="Przekroczono czas oczekiwania na odpowiedź (przykład)",
         )
-        Source.objects.filter(key="osm").update(last_sync_at=timezone.now())
 
         # Upsert by name so sample places keep stable IDs across restarts (links,
         # "recently viewed", demo script). Only their sample facts are reset -
@@ -156,6 +156,15 @@ class Command(BaseCommand):
                                 observed_at=date.fromisoformat(f["observed_at"][:10]),
                                 note=f.get("note", ""), is_sample=False)
             n_facts += 1
+        # Honest "last sync": when the snapshot was taken (newest OSM edit in it),
+        # not "now" - unless a live import_osm has run more recently.
+        snapshot = max((e["fields"]["observed_at"][:10] for e in entries
+                        if e["model"] == "places.fact"), default=None)
+        osm = sources.get("osm")
+        if snapshot and osm:
+            snapshot_at = timezone.make_aware(datetime.combine(date.fromisoformat(snapshot), time()))
+            if osm.last_sync_at is None or osm.last_sync_at < snapshot_at:
+                Source.objects.filter(pk=osm.pk).update(last_sync_at=snapshot_at, status="ok", last_error="")
         self.stdout.write(self.style.SUCCESS(
             f"Fikstura OSM: {n_places} nowych miejsc, {n_facts} nowych faktów"))
 

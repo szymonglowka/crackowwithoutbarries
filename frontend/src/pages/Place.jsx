@@ -50,20 +50,23 @@ export default function Place() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, profileKey])
 
-  // "Byłem tam, potwierdzam": POST current value; if endpoint missing yet, link to /zglos.
-  const confirmValue = async (param) => {
-    const current = param.sources?.[0]
-    if (!current) return
+  // "Byłem tam, potwierdzam": the user picks WHICH version they saw (conflicts have several).
+  const confirmValue = async (param, value) => {
     setConfirm({ key: param.key, msg: '', reportsDown: false })
     try {
       await createReport({
         place: Number(id),
         parameter: param.key,
-        value: current.value,
+        value,
         observed_at: new Date().toISOString().slice(0, 10),
         website: '',
       })
-      setConfirm({ key: null, msg: 'Dziękujemy! Twoje potwierdzenie zostało zapisane.', reportsDown: false })
+      setConfirm({ key: null, msg: 'Dziękujemy! Twoje potwierdzenie zostało zapisane i jest widoczne jako zgłoszenie użytkownika.', reportsDown: false })
+      // Refresh silently (no skeleton) so the new report shows up on the card
+      getPlace(id, profile.values).then((place) => {
+        saveRecent(place)
+        setState({ status: 'ok', place, offlineCopy: false })
+      }).catch(() => {})
     } catch (e) {
       if (e?.status === 404) {
         setConfirm({ key: null, msg: '', reportsDown: true })
