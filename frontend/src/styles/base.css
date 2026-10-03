@@ -87,6 +87,10 @@ img { max-width: 100%; height: auto; }
 html { scroll-padding-bottom: calc(var(--bottom-nav-h) + 96px); scroll-padding-top: var(--space-4); }
 @media (min-width: 1024px) { html { scroll-padding-bottom: var(--space-5); } }
 
+.card-link { display: block; color: inherit; text-decoration: none; }
+.card-link:hover { border-color: var(--color-primary); box-shadow: 0 2px 8px rgb(0 0 0 / 0.12); }
+.card-link:hover .card-link__title { text-decoration: underline; }
+
 /* Disclosure widgets: one consistent, visible expand indicator + 48 px target everywhere.
    The footer uses its own +/− marker (layout.css), so it is excluded here. */
 details > summary {
