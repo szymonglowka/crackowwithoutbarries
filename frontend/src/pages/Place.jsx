@@ -178,6 +178,7 @@ export default function Place() {
                     param={p}
                     onConfirm={confirm.reportsDown ? null : confirmValue}
                     confirming={confirm.key === p.key}
+                    placeIsSample={place.is_sample}
                   />
                 ))}
               </tbody>

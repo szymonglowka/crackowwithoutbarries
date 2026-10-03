@@ -3,16 +3,16 @@
 import { Link } from 'react-router-dom'
 import { MatchBadge, ReliabilityBadge, SampleBadge, formatDate } from '../Badges.jsx'
 
-function SourceLine({ s }) {
+function SourceLine({ s, placeIsSample }) {
   return (
     <span>
       {s.source.name}, potwierdzone {formatDate(s.observed_at)}
-      {s.is_sample && <> <SampleBadge /></>}
+      {s.is_sample && !placeIsSample && <> <SampleBadge /></>}
     </span>
   )
 }
 
-export default function ParameterRow({ placeId, param, onConfirm, confirming }) {
+export default function ParameterRow({ placeId, param, onConfirm, confirming, placeIsSample }) {
   const [primary, ...rest] = param.sources ?? []
   const conflict = param.status === 'conflicting'
   const missing = param.status === 'missing'
@@ -37,14 +37,14 @@ export default function ParameterRow({ placeId, param, onConfirm, confirming }) 
           <Link to={`/zglos?place=${placeId}&parameter=${param.key}`}>Pomóż uzupełnić</Link>
         ) : (
           <>
-            <SourceLine s={primary} />
+            <SourceLine s={primary} placeIsSample={placeIsSample} />
             {' '}<ReliabilityBadge status={param.status} />
             {conflict ? (
               <div className="param__all-sources">
                 <p><strong>Wersje ze wszystkich źródeł:</strong></p>
                 <ul>
                   {param.sources.map((s, i) => (
-                    <li key={i}><SourceLine s={s} />: <strong>{s.value_display}</strong></li>
+                    <li key={i}><SourceLine s={s} placeIsSample={placeIsSample} />: <strong>{s.value_display}</strong></li>
                   ))}
                 </ul>
                 <ConfirmButton placeId={placeId} param={param} onConfirm={onConfirm} confirming={confirming} />
@@ -55,7 +55,7 @@ export default function ParameterRow({ placeId, param, onConfirm, confirming }) 
                   <summary>Inne źródła ({rest.length})</summary>
                   <ul>
                     {rest.map((s, i) => (
-                      <li key={i}><SourceLine s={s} />: {s.value_display}</li>
+                      <li key={i}><SourceLine s={s} placeIsSample={placeIsSample} />: {s.value_display}</li>
                     ))}
                   </ul>
                 </details>
