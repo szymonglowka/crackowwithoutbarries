@@ -17,9 +17,6 @@
 }
 
 .route-avoid summary {
-  min-height: var(--tap);
-  display: flex;
-  align-items: center;
   cursor: pointer;
   font-weight: 600;
 }
