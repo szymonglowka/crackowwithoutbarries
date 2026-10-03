@@ -5,7 +5,7 @@ main:focus { outline: none; }
 .prototype-banner { background: var(--color-sample-bg); color: var(--color-sample); }
 .prototype-banner__inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .prototype-banner p { margin: 0; font-weight: 600; }
-.prototype-banner .btn { min-height: 40px; border-color: var(--color-sample); color: var(--color-sample); background: transparent; }
+.prototype-banner .btn { min-height: var(--tap); border-color: var(--color-sample); color: var(--color-sample); background: transparent; }
 
 .site-header { border-bottom: 1px solid var(--color-border); background: var(--color-bg); }
 .site-header__inner { display: flex; align-items: center; justify-content: space-between; min-height: var(--header-h); }
