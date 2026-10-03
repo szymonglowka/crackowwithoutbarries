@@ -87,6 +87,16 @@ const STEP_TITLES = {
 
   const parameters = useMemo(() => meta?.parameters ?? [], [meta])
 
+  const paramGroups = useMemo(() => {
+    const groups = meta?.groups ?? []
+    const grouped = groups
+      .map((g) => ({ ...g, params: parameters.filter((p) => p.group === g.key) }))
+      .filter((g) => g.params.length > 0)
+    if (grouped.length > 0) return grouped
+    if (parameters.length > 0) return [{ key: 'all', label: 'Parametry', params: parameters }]
+    return []
+  }, [meta, parameters])
+
   const paramDef = parameters.find((p) => p.key === paramKey)
 
   // Show current value of the chosen parameter, read-only
@@ -241,11 +251,16 @@ const STEP_TITLES = {
               aria-describedby={(errors.parameter || serverErrors?.parameter) ? 'report-parameter-error' : undefined}>
               <legend>Co chcesz zgłosić?</legend>
               {!meta && <Loading lines={3} />}
-              {parameters.map((p) => (
-                <label key={p.key} className="report-param">
-                  <input type="radio" name="parameter" value={p.key} checked={paramKey === p.key} onChange={(e) => setParamKey(e.target.value)} />
-                  <span>{p.label}</span>
-                </label>
+              {paramGroups.map((g) => (
+                <fieldset key={g.key} className="report-params-group">
+                  <legend>{g.label}</legend>
+                  {g.params.map((p) => (
+                    <label key={p.key} className="report-param">
+                      <input type="radio" name="parameter" value={p.key} checked={paramKey === p.key} onChange={(e) => setParamKey(e.target.value)} />
+                      <span>{p.label}</span>
+                    </label>
+                  ))}
+                </fieldset>
               ))}
               {errors.parameter && <p className="report-field-error" id="report-parameter-error">{errors.parameter}</p>}
               {fieldError(serverErrors, 'parameter')}
