@@ -1,5 +1,5 @@
 // OWNER: A2. Route result: summary, Opis/Mapa toggle, numbered steps, alt route, map.
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
 import { MatchBadge, SampleBadge, formatDate } from '../Badges.jsx'
 import StatusIcon from '../StatusIcon.jsx'
 import { Loading } from '../PageStates.jsx'
@@ -68,6 +68,8 @@ function altText(main, alt) {
 }
 
 export default function RouteResult({ routes, activeId, onSelect }) {
+  const titleRef = useRef(null)
+  useEffect(() => { titleRef.current?.focus() }, [])
   const [view, setView] = useState('opis')
   const [guided, setGuided] = useState(false)
   const [guideIdx, setGuideIdx] = useState(0)
@@ -87,7 +89,8 @@ export default function RouteResult({ routes, activeId, onSelect }) {
 
   return (
     <section aria-label="Wyznaczona trasa">
-      <p className="route-summary" aria-live="polite">
+      <h2 className="route-result__title" tabIndex={-1} ref={titleRef}>Wynik: trasa bez schodów</h2>
+      <p className="route-summary">
         <strong>{active.summary_text}</strong>
       </p>
       <p className="route-source">
