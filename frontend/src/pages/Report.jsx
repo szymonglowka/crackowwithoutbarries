@@ -67,6 +67,13 @@ export default function Report() {
   const [done, setDone] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const summaryRef = useRef(null)
+  const stepHeadingRef = useRef(null)
+
+const STEP_TITLES = {
+  1: 'Krok 1 z 3: miejsce i parametr',
+  2: 'Krok 2 z 3: co się zmieniło',
+  3: 'Krok 3 z 3: sprawdź i wyślij',
+}
 
   // Load pre-selected place
   useEffect(() => {
@@ -125,8 +132,9 @@ export default function Report() {
     return Object.keys(e).length === 0
   }
 
-  const next = (e) => { e.preventDefault(); if (validateStep()) { setStep((s) => Math.min(3, s + 1)); setServerErrors(null) } }
-  const back = () => setStep((s) => Math.max(1, s - 1))
+  const focusStepHeading = () => setTimeout(() => stepHeadingRef.current?.focus(), 0)
+  const next = (e) => { e.preventDefault(); if (validateStep()) { setStep((s) => Math.min(3, s + 1)); setServerErrors(null); focusStepHeading() } }
+  const back = () => { setStep((s) => Math.max(1, s - 1)); focusStepHeading() }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -165,7 +173,7 @@ export default function Report() {
   return (
     <div className="container page report">
       <h1>Zgłoś zmianę lub błąd</h1>
-      <p aria-live="polite">Krok {step} z 3</p>
+      <h2 tabIndex={-1} ref={stepHeadingRef}>{STEP_TITLES[step]}</h2>
 
       {(Object.keys(errors).length > 0 || serverList.length > 0) && (
         <div className="notice notice--warning" ref={summaryRef} tabIndex={-1} role="alert">
