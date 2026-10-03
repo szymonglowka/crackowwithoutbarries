@@ -13,11 +13,28 @@ export default function Header() {
   useEffect(() => {
     if (!open) return
     firstLinkRef.current?.focus()
+    document.body.style.overflow = 'hidden'
     const onKey = (e) => {
       if (e.key === 'Escape') close()
+      if (e.key === 'Tab') {
+        const items = Array.from(document.querySelectorAll('#site-menu a[href], #site-menu button'))
+        if (items.length === 0) return
+        const first = items[0]
+        const last = items[items.length - 1]
+        if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault()
+          first.focus()
+        } else if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault()
+          last.focus()
+        }
+      }
     }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = ''
+    }
   }, [open])
 
   function close() {

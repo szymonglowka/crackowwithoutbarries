@@ -22,7 +22,15 @@ export function ReliabilityBadge({ status }) {
 }
 
 /** How a parameter matches the user's profile (icon + word). */
-export function MatchBadge({ match, children }) {
+export function MatchBadge({ match, children, muted }) {
+  if (muted) {
+    return (
+      <span className="badge badge--muted">
+        <StatusIcon status="info" size={16} />
+        {children ?? MATCH_LABELS[match]}
+      </span>
+    )
+  }
   return (
     <span className={`badge badge--${match}`}>
       <StatusIcon status={match} size={16} />
@@ -45,8 +53,8 @@ export function SampleBadge() {
 export function MatchSummary({ summary }) {
   return (
     <ul className="match-summary" aria-label="Dopasowanie do Twojego profilu">
-      <li><MatchBadge match="match">{summary.match} pasuje</MatchBadge></li>
-      <li><MatchBadge match="barrier">{summary.barrier} {plural(summary.barrier, 'bariera', 'bariery', 'barier')}</MatchBadge></li>
+      <li><MatchBadge match="match" muted={summary.match === 0}>{summary.match} pasuje</MatchBadge></li>
+      <li><MatchBadge match="barrier" muted={summary.barrier === 0}>{summary.barrier} {plural(summary.barrier, 'bariera', 'bariery', 'barier')}</MatchBadge></li>
       <li><MatchBadge match="unknown">{summary.unknown} brak danych</MatchBadge></li>
     </ul>
   )
