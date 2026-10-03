@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hotel Pod Wawelem — demo widgetu BezProgu</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
+    header { border-bottom: 2px solid #0b4f9c; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hotel Pod Wawelem (strona demonstracyjna)</h1>
+    <p>Przykładowa strona hotelu z osadzonym widgetem dostępności BezProgu.</p>
+  </header>
+  <main>
+    <h2>Nasza dostępność</h2>
+    <!-- W produkcji: src="https://bezprogu.pl/widget/ID_OBIEKTU" -->
+    <iframe src="/widget/1" title="Dostępność obiektu w BezProgu"
+      width="100%" height="560" style="border:0"></iframe>
+  </main>
+</body>
+</html>
