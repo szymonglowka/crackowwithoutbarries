@@ -27,25 +27,58 @@ Built for the HackYeah 2026 challenge *Kraków bez barier*. UI language: Polish.
   maintenance (`/dla-miast`), FAQ, accessibility statement, privacy, licences.
 - Mobile first, keyboard and screen-reader friendly (WCAG 2.2 AA as the target).
 
-## Quick start
+## Getting started
 
-Requirements: **Docker Desktop** (with Docker Compose), ~4 GB RAM for Docker, internet on the first start.
+Requirements: **Docker Desktop** (with Docker Compose), at least 4 GB of memory for Docker
+(Settings → Resources), internet on the first start.
+
+### 1. Create the config (first time only)
 
 macOS / Linux:
 
 ```bash
 cp .env.example .env
-docker compose up --build
 ```
 
 Windows (PowerShell):
 
 ```powershell
 Copy-Item .env.example .env
+```
+
+### 2. Start everything
+
+```bash
 docker compose up --build
 ```
 
-Then open **http://localhost:5173**.
+All data loads automatically; no import commands are needed. On start the backend runs migrations
+and `seed_demo`, which loads (without network):
+
+- **~1950 real places** from the committed OpenStreetMap snapshot
+  (`backend/places/fixtures/osm_krakow.json`),
+- **4 sample places**, all labelled *"Dane przykładowe"*. *Sukiennice (przykład)* (`/miejsce/5`)
+  demonstrates every data state,
+- **sample kerbs and crossings** on the demo route (Kraków Główny → Rynek).
+
+GraphHopper downloads the Małopolska extract from Geofabrik (~200 MB) and builds its routing graph:
+**about 5 minutes on the first start**, seconds afterwards (data is kept in the `gh_data` volume).
+Until then `/trasa` shows *"Usługa wyznaczania tras jest chwilowo niedostępna"* — the intended
+"source unavailable" state.
+
+### 3. Check it's ready
+
+```bash
+docker compose logs backend | grep -E "Seeded|Fikstura"
+```
+
+You should see `Seeded 4 sample places` and a `Fikstura OSM: …` line.
+
+```bash
+docker compose logs graphhopper | grep "Started Server"
+```
+
+When this prints a line, routing is ready. Then open **http://localhost:5173**.
 
 | Service | URL | What it is |
 |---|---|---|
@@ -54,21 +87,41 @@ Then open **http://localhost:5173**.
 | `db` | `localhost:5432` | PostgreSQL 17 + PostGIS 3.5 |
 | `graphhopper` | internal only (`graphhopper:8989`) | GraphHopper 10 routing engine |
 
-### What happens on the first start
+### Optional
 
-- The backend runs migrations and `seed_demo`: it loads **~1950 real places from OpenStreetMap**
-  (committed snapshot, no network needed) plus a few **sample places clearly labelled
-  "Dane przykładowe"** that demonstrate every data state.
-- GraphHopper downloads the Małopolska extract from Geofabrik (~200 MB) and builds its routing graph,
-  which takes **about 5 minutes**. Until then `/trasa` shows *"Usługa wyznaczania tras jest chwilowo
-  niedostępna"* — the intended "source unavailable" state. Later starts take seconds (data is kept
-  in the `gh_data` volume).
-
-Admin panel (moderating reports, editing places): http://localhost:8000/admin/ after
+Admin account, to moderate reports and edit places at http://localhost:8000/admin/:
 
 ```bash
 docker compose exec backend python manage.py createsuperuser
 ```
+
+Refresh the OSM places from the latest Geofabrik extract (~10 s; the first run downloads ~200 MB):
+
+```bash
+docker compose exec backend python manage.py import_osm
+```
+
+Real kerb and crossing data instead of the demo sample. This uses the public Overpass API, which may
+be slow or unreachable on some networks; if it fails, the demo data stays in place:
+
+```bash
+docker compose exec backend python manage.py import_obstacles
+```
+
+### Clean restart from scratch
+
+Deletes the database and the routing data (GraphHopper rebuilds again, ~5 minutes):
+
+```bash
+docker compose down -v
+```
+
+```bash
+docker compose up --build
+```
+
+> **Before a demo**, start the stack well ahead so GraphHopper has finished building, and don't run
+> `docker compose down -v` just before presenting.
 
 ## Demo path
 
