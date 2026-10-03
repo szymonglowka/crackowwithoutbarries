@@ -36,10 +36,10 @@ export default function ForCities() {
       </section>
 
       <section aria-labelledby="dodac">
-        <h2 id="dodac">Jak dodać…</h2>
-        <details className="card"><summary>miasto</summary><p>Uruchom istniejące importery z nowym obszarem (granice miasta), dodaj lokalne zbiory otwarte jako nowe źródło. Bez zmian w kodzie prezentacji.</p></details>
-        <details className="card"><summary>źródło</summary><p>Nowy importer + wiersz Source (status, synchronizacja, błędy). Przy awarii stare dane zostają, a status zmienia się na „niedostępne”.</p></details>
-        <details className="card"><summary>kategorię miejsc</summary><p>Wpis w katalogu kategorii — bez migracji bazy, frontend pobiera listę z /api/meta/.</p></details>
+        <h2 id="dodac">Jak dodać kolejne miasto, źródło lub kategorię</h2>
+        <details className="card"><summary>Kolejne miasto</summary><p>Uruchom istniejące importery z nowym obszarem (granice miasta), dodaj lokalne zbiory otwarte jako nowe źródło. Bez zmian w kodzie prezentacji.</p></details>
+        <details className="card"><summary>Nowe źródło danych</summary><p>Nowy importer + wiersz Source (status, synchronizacja, błędy). Przy awarii stare dane zostają, a status zmienia się na „niedostępne”.</p></details>
+        <details className="card"><summary>Nowa kategoria miejsc</summary><p>Wpis w katalogu kategorii — bez migracji bazy, frontend pobiera listę z /api/meta/.</p></details>
       </section>
 
       <section aria-labelledby="lic">

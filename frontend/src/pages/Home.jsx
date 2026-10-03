@@ -60,11 +60,12 @@ export default function Home() {
           <p className="home-mock-name">Sukiennice <SampleBadge /></p>
           <ul className="match-summary" aria-label="Dopasowanie do Twojego profilu">
             <li><MatchBadge match="match">4 pasuje</MatchBadge></li>
-            <li><MatchBadge match="barrier">1 bariera</MatchBadge></li>
-            <li><MatchBadge match="unknown">2 brak danych</MatchBadge></li>
+            <li><MatchBadge match="barrier">3 bariery</MatchBadge></li>
+            <li><MatchBadge match="unknown">1 brak danych</MatchBadge></li>
           </ul>
           <p className="home-mock-fact">Wejście główne: 3 stopnie. <strong>Bariera</strong>, potwierdzone 09.2026.</p>
-          <p><Link to="/szukaj?q=Sukiennice">Zobacz kartę →</Link></p>
+          <p><Link to="/miejsce/5">Zobacz kartę →</Link></p>
+          <p>Dane przykładowe, profil: wózek.</p>
         </div>
       </section>
 
@@ -88,10 +89,10 @@ export default function Home() {
           <div className="card">
             <h3>Tak jest w BezProgu</h3>
             <ul>
-              <li>Stopnie przy wejściu: 3 szt. — potwierdzone</li>
-              <li>Wejście boczne bez progu — zgłoszenie użytkownika</li>
-              <li>Szerokość drzwi: 85 cm — z otwartych danych</li>
-              <li>Winda: brak danych — nie zgadujemy</li>
+              <li>Stopnie przy wejściu głównym: 3 — potwierdził właściciel</li>
+              <li>Wejście boczne bez stopni — potwierdził właściciel</li>
+              <li>Szerokość drzwi: 85 cm — potwierdził właściciel</li>
+              <li>Przewijak: brak danych — nie zgadujemy</li>
             </ul>
           </div>
         </div>
@@ -101,9 +102,9 @@ export default function Home() {
       <section aria-labelledby="home-steps-h">
         <h2 id="home-steps-h">Trzy kroki</h2>
         <ol className="home-steps">
-          <li><strong>1.</strong> Powiedz, co jest dla Ciebie barierą — tylko na Twoim urządzeniu.</li>
-          <li><strong>2.</strong> Wyszukaj miejsce albo zaplanuj trasę.</li>
-          <li><strong>3.</strong> Sprawdź konkretne parametry: co pasuje, co jest barierą, czego nie wiemy.</li>
+          <li>Powiedz, co jest dla Ciebie barierą — tylko na Twoim urządzeniu.</li>
+          <li>Wyszukaj miejsce albo zaplanuj trasę.</li>
+          <li>Sprawdź konkretne parametry: co pasuje, co jest barierą, czego nie wiemy.</li>
         </ol>
       </section>
 

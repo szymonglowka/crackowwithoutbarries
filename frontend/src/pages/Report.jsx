@@ -6,14 +6,36 @@ import { useMeta } from '../hooks/useMeta.js'
 import { getPlace, searchPlaces } from '../api/places.js'
 import { createReport } from '../api/reports.js'
 import { ErrorState, Loading } from '../components/PageStates.jsx'
+import { formatDate } from '../components/Badges.jsx'
 import './Report.css'
 
 const todayISO = () => new Date().toISOString().slice(0, 10)
 
+const ERROR_IDS = {
+  place: 'report-place-error',
+  parameter: 'report-parameter-error',
+  value: 'report-new-error',
+  observed_at: 'report-date-error',
+  email: 'report-email-error',
+}
+
+const FIELD_IDS = {
+  place: 'report-place',
+  parameter: 'report-parameters',
+  value: 'report-new',
+  observed_at: 'report-date',
+  email: 'report-email',
+}
+
 function fieldError(body, field) {
   const msgs = body?.[field]
   if (!msgs) return null
-  return <p className="report-field-error" role="alert">{Array.isArray(msgs) ? msgs.join(' ') : String(msgs)}</p>
+  return <p className="report-field-error" id={ERROR_IDS[field]}>{Array.isArray(msgs) ? msgs.join(' ') : String(msgs)}</p>
+}
+
+const focusField = (e, id) => {
+  e.preventDefault()
+  document.getElementById(id)?.focus()
 }
 
 
@@ -46,6 +68,13 @@ export default function Report() {
   const [done, setDone] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const summaryRef = useRef(null)
+  const stepHeadingRef = useRef(null)
+
+const STEP_TITLES = {
+  1: 'Krok 1 z 3: miejsce i parametr',
+  2: 'Krok 2 z 3: co się zmieniło',
+  3: 'Krok 3 z 3: sprawdź i wyślij',
+}
 
   // Load pre-selected place
   useEffect(() => {
@@ -59,7 +88,25 @@ export default function Report() {
 
   const parameters = useMemo(() => meta?.parameters ?? [], [meta])
 
+  const paramGroups = useMemo(() => {
+    const groups = meta?.groups ?? []
+    const grouped = groups
+      .map((g) => ({ ...g, params: parameters.filter((p) => p.group === g.key) }))
+      .filter((g) => g.params.length > 0)
+    if (grouped.length > 0) return grouped
+    if (parameters.length > 0) return [{ key: 'all', label: 'Parametry', params: parameters }]
+    return []
+  }, [meta, parameters])
+
   const paramDef = parameters.find((p) => p.key === paramKey)
+
+  const formatNewValue = () => {
+    if (newValue === '' || newValue == null) return '—'
+    if (paramDef?.type === 'bool') return newValue === 'tak' || newValue === 'nie' ? newValue : String(newValue)
+    if (paramDef?.type === 'enum' && paramDef.choices) return paramDef.choices[newValue] ?? String(newValue)
+    if ((paramDef?.type === 'int' || paramDef?.type === 'number') && paramDef.unit) return `${newValue} ${paramDef.unit}`
+    return String(newValue)
+  }
 
   // Show current value of the chosen parameter, read-only
   useEffect(() => {
@@ -104,8 +151,9 @@ export default function Report() {
     return Object.keys(e).length === 0
   }
 
-  const next = (e) => { e.preventDefault(); if (validateStep()) { setStep((s) => Math.min(3, s + 1)); setServerErrors(null) } }
-  const back = () => setStep((s) => Math.max(1, s - 1))
+  const focusStepHeading = () => setTimeout(() => stepHeadingRef.current?.focus(), 0)
+  const next = (e) => { e.preventDefault(); if (validateStep()) { setStep((s) => Math.min(3, s + 1)); setServerErrors(null); focusStepHeading() } }
+  const back = () => { setStep((s) => Math.max(1, s - 1)); focusStepHeading() }
 
   const submit = async (e) => {
     e.preventDefault()
@@ -138,20 +186,32 @@ export default function Report() {
 
   const serverList = serverErrors
     ? Object.entries(serverErrors).flatMap(([k, v]) =>
-        (Array.isArray(v) ? v : [v]).map((m) => (FIELD_LABELS[k] ? `${FIELD_LABELS[k]}: ${m}` : m)))
+        (Array.isArray(v) ? v : [v]).map((m) => ({ key: k, text: FIELD_LABELS[k] ? `${FIELD_LABELS[k]}: ${m}` : String(m) })))
     : []
 
   return (
     <div className="container page report">
       <h1>Zgłoś zmianę lub błąd</h1>
-      <p aria-live="polite">Krok {step} z 3</p>
+      <h2 tabIndex={-1} ref={stepHeadingRef}>{STEP_TITLES[step]}</h2>
 
       {(Object.keys(errors).length > 0 || serverList.length > 0) && (
         <div className="notice notice--warning" ref={summaryRef} tabIndex={-1} role="alert">
           <strong>Popraw następujące pola:</strong>
           <ul>
-            {Object.entries(errors).map(([k, v]) => <li key={k}>{v}</li>)}
-            {serverList.map((m, i) => <li key={i}>{m}</li>)}
+            {Object.entries(errors).map(([k, v]) => (
+              <li key={k}>
+                {FIELD_IDS[k]
+                  ? <a href={`#${FIELD_IDS[k]}`} onClick={(e) => focusField(e, FIELD_IDS[k])}>{v}</a>
+                  : v}
+              </li>
+            ))}
+            {serverList.map((m, i) => (
+              <li key={i}>
+                {FIELD_IDS[m.key]
+                  ? <a href={`#${FIELD_IDS[m.key]}`} onClick={(e) => focusField(e, FIELD_IDS[m.key])}>{m.text}</a>
+                  : m.text}
+              </li>
+            ))}
           </ul>
         </div>
       )}
@@ -177,6 +237,7 @@ export default function Report() {
                   <input
                     id="report-place" type="text" value={placeQuery} onChange={(e) => onQuery(e.target.value)}
                     placeholder="Wpisz nazwę miejsca" autoComplete="off" role="combobox" aria-expanded={placeOptions.length > 0} aria-controls="report-place-list"
+                    aria-invalid={!!(errors.place || serverErrors?.place)} aria-describedby={(errors.place || serverErrors?.place) ? 'report-place-error' : undefined}
                   />
                   {placeOptions.length > 0 && (
                     <ul id="report-place-list" role="listbox" className="report-options">
@@ -191,19 +252,27 @@ export default function Report() {
                   )}
                 </>
               )}
-              {errors.place && <p className="report-field-error" role="alert">{errors.place}</p>}
+              {errors.place && <p className="report-field-error" id="report-place-error">{errors.place}</p>}
+              {fieldError(serverErrors, 'place')}
             </div>
 
-            <fieldset className="report-params">
+            <fieldset className="report-params" id="report-parameters" tabIndex={-1}
+              aria-describedby={(errors.parameter || serverErrors?.parameter) ? 'report-parameter-error' : undefined}>
               <legend>Co chcesz zgłosić?</legend>
               {!meta && <Loading lines={3} />}
-              {parameters.map((p) => (
-                <label key={p.key} className="report-param">
-                  <input type="radio" name="parameter" value={p.key} checked={paramKey === p.key} onChange={(e) => setParamKey(e.target.value)} />
-                  <span>{p.label}</span>
-                </label>
+              {paramGroups.map((g) => (
+                <fieldset key={g.key} className="report-params-group">
+                  <legend>{g.label}</legend>
+                  {g.params.map((p) => (
+                    <label key={p.key} className="report-param">
+                      <input type="radio" name="parameter" value={p.key} checked={paramKey === p.key} onChange={(e) => setParamKey(e.target.value)} />
+                      <span>{p.label}</span>
+                    </label>
+                  ))}
+                </fieldset>
               ))}
-              {errors.parameter && <p className="report-field-error" role="alert">{errors.parameter}</p>}
+              {errors.parameter && <p className="report-field-error" id="report-parameter-error">{errors.parameter}</p>}
+              {fieldError(serverErrors, 'parameter')}
             </fieldset>
           </>
         )}
@@ -217,13 +286,15 @@ export default function Report() {
             <div className="field">
               <label htmlFor="report-new">Nowa wartość</label>
               {paramDef?.type === 'bool' ? (
-                <select id="report-new" value={newValue} onChange={(e) => setNewValue(e.target.value)}>
+                <select id="report-new" value={newValue} onChange={(e) => setNewValue(e.target.value)}
+                  aria-invalid={!!(errors.value || serverErrors?.value)} aria-describedby={(errors.value || serverErrors?.value) ? 'report-new-error' : undefined}>
                   <option value="">— wybierz —</option>
                   <option value="tak">tak</option>
                   <option value="nie">nie</option>
                 </select>
               ) : paramDef?.type === 'enum' && paramDef.choices ? (
-                <select id="report-new" value={newValue} onChange={(e) => setNewValue(e.target.value)}>
+                <select id="report-new" value={newValue} onChange={(e) => setNewValue(e.target.value)}
+                  aria-invalid={!!(errors.value || serverErrors?.value)} aria-describedby={(errors.value || serverErrors?.value) ? 'report-new-error' : undefined}>
                   <option value="">— wybierz —</option>
                   {Object.entries(paramDef.choices).map(([v, label]) => <option key={v} value={v}>{label}</option>)}
                 </select>
@@ -231,9 +302,10 @@ export default function Report() {
                 <input
                   id="report-new" type="number" value={newValue} onChange={(e) => setNewValue(e.target.value)}
                   placeholder={paramDef?.unit ? `np. 2 (${paramDef.unit})` : 'np. 2'}
+                  aria-invalid={!!(errors.value || serverErrors?.value)} aria-describedby={(errors.value || serverErrors?.value) ? 'report-new-error' : undefined}
                 />
               )}
-              {errors.value && <p className="report-field-error" role="alert">{errors.value}</p>}
+              {errors.value && <p className="report-field-error" id="report-new-error">{errors.value}</p>}
               {fieldError(serverErrors, 'value')}
             </div>
             <div className="field">
@@ -247,8 +319,9 @@ export default function Report() {
             </div>
             <div className="field">
               <label htmlFor="report-date">Data obserwacji</label>
-              <input id="report-date" type="date" value={observedAt} max={todayISO()} onChange={(e) => setObservedAt(e.target.value)} />
-              {errors.observed_at && <p className="report-field-error" role="alert">{errors.observed_at}</p>}
+              <input id="report-date" type="date" value={observedAt} max={todayISO()} onChange={(e) => setObservedAt(e.target.value)}
+                aria-invalid={!!(errors.observed_at || serverErrors?.observed_at)} aria-describedby={(errors.observed_at || serverErrors?.observed_at) ? 'report-date-error' : undefined} />
+              {errors.observed_at && <p className="report-field-error" id="report-date-error">{errors.observed_at}</p>}
               {fieldError(serverErrors, 'observed_at')}
             </div>
           </>
@@ -260,14 +333,15 @@ export default function Report() {
               <dt>Miejsce</dt><dd>{place?.name ?? `#${placeId}`}</dd>
               <dt>Parametr</dt><dd>{paramDef?.label ?? paramKey}</dd>
               <dt>Obecna wartość</dt><dd>{currentValue || '—'}</dd>
-              <dt>Nowa wartość</dt><dd>{String(newValue)}</dd>
+              <dt>Nowa wartość</dt><dd>{formatNewValue()}</dd>
               {comment && <><dt>Opis</dt><dd>{comment}</dd></>}
-              <dt>Data obserwacji</dt><dd>{observedAt}</dd>
+              <dt>Data obserwacji</dt><dd>{formatDate(observedAt)}</dd>
             </dl>
             <div className="field">
               <label htmlFor="report-email">E-mail do powiadomienia (opcjonalnie)</label>
-              <input id="report-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="ty@przyklad.pl" />
-              {errors.email && <p className="report-field-error" role="alert">{errors.email}</p>}
+              <input id="report-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="ty@przyklad.pl"
+                aria-invalid={!!(errors.email || serverErrors?.email)} aria-describedby={(errors.email || serverErrors?.email) ? 'report-email-error' : undefined} />
+              {errors.email && <p className="report-field-error" id="report-email-error">{errors.email}</p>}
               {fieldError(serverErrors, 'email')}
             </div>
           </>

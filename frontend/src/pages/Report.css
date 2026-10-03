@@ -1,5 +1,7 @@
 .report-params { border: none; padding: 0; margin: 0 0 var(--space-3); display: grid; gap: var(--space-2); }
 .report-params legend { font-weight: 700; margin-bottom: var(--space-2); }
+.report-params-group { border: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+.report-params-group legend { font-weight: 600; margin-bottom: var(--space-1); }
 .report-param {
   display: flex; align-items: center; gap: var(--space-2);
   border: 2px solid var(--color-border); border-radius: var(--radius);

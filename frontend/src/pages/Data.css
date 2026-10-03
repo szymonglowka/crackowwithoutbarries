@@ -3,7 +3,7 @@
 .data-statuses { list-style: none; padding: 0; display: grid; gap: var(--space-2); }
 .data-statuses p { margin: var(--space-1) 0; }
 .data-source { margin-bottom: var(--space-2); }
-.data-source summary { min-height: var(--tap); display: inline-flex; align-items: center; font-weight: 700; cursor: pointer; }
+.data-source summary { font-weight: 700; cursor: pointer; }
 .data-source dl { display: grid; grid-template-columns: auto 1fr; gap: var(--space-1) var(--space-3); }
 .data-source dt { font-weight: 700; }
 .data-source dd { margin: 0; }

@@ -1,9 +1,12 @@
 // OWNER: A4 - profil potrzeb użytkownika (localStorage, bez pytania o niepełnosprawność).
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js'
 import { useMeta } from '../hooks/useMeta.js'
 import { DEFAULT_PROFILE, useProfile } from '../hooks/useProfile.js'
+import { getPlace } from '../api/places.js'
 import { Loading } from '../components/PageStates.jsx'
+import { MatchSummary, plural } from '../components/Badges.jsx'
 import './Needs.css'
 
 const STROLLER_FALLBACK = {
@@ -69,8 +72,16 @@ export default function Needs() {
   const [draft, setDraft] = useState(profile.values)
   const [saved, setSaved] = useState(false)
   const confirmRef = useRef(null)
+  const [preview, setPreview] = useState(null)
 
   useEffect(() => { setDraft(profile.values) }, [profile.values])
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      getPlace(5, draft).then(setPreview).catch(() => {})
+    }, 400)
+    return () => clearTimeout(t)
+  }, [draft])
 
   const presets = useMemo(() => {
     const fromMeta = meta?.profile_presets
@@ -110,60 +121,76 @@ export default function Needs() {
         Ustawienia zostają tylko na tym urządzeniu.
       </p>
 
-      <form onSubmit={save}>
-        <fieldset className="needs-presets" onChange={(e) => pickPreset(e.target.value)}>
-          <legend>Wybierz profil</legend>
-          {presets.map((p) => (
-            <label key={p.key} className="needs-preset-card">
-              <input
-                type="radio" name="preset" value={p.key}
-                checked={selectedPreset === p.key} onChange={() => {}}
-              />
-              <span className="needs-preset-label">{p.label}</span>
-            </label>
-          ))}
-        </fieldset>
+      <div className="needs-layout">
+        <form onSubmit={save}>
+          <fieldset className="needs-presets" onChange={(e) => pickPreset(e.target.value)}>
+            <legend>Wybierz profil</legend>
+            {presets.map((p) => (
+              <label key={p.key} className="needs-preset-card">
+                <input
+                  type="radio" name="preset" value={p.key}
+                  checked={selectedPreset === p.key} onChange={() => {}}
+                />
+                <span className="needs-preset-label">{p.label}</span>
+              </label>
+            ))}
+          </fieldset>
 
-        {!meta && <Loading lines={4} />}
-        {GROUP_ORDER.map((group) => (
-          <section key={group.key} className="card needs-group" aria-labelledby={`needs-h-${group.key}`}>
-            <h2 id={`needs-h-${group.key}`}>{group.label}</h2>
-            {group.fields.map((key) => {
-              const f = byKey[key]
-              if (!f) return null
-              const label = f.label ?? FIELD_LABELS[key]
-              if (f.type === 'bool') {
-                return (
-                  <div key={key} className="field needs-bool">
-                    <label>
-                      <input
-                        type="checkbox" role="switch" aria-checked={!!draft[key]}
-                        checked={!!draft[key]} onChange={(e) => setField(key, e.target.checked)}
-                      />
-                      {label}
-                    </label>
-                    <details><summary>Co to znaczy?</summary><p>{HINTS[key]}</p></details>
-                  </div>
-                )
-              }
-              return (
-                <div key={key} className="field">
-                  <label htmlFor={`needs-${key}`}>{label}</label>
-                  <NumberField field={key} value={draft[key]} onChange={(v) => setField(key, v)} />
-                  <details><summary>Co to znaczy?</summary><p>{HINTS[key]}</p></details>
-                </div>
-              )
-            })}
-          </section>
-        ))}
+          <div className="needs-groups">
+            {!meta && <Loading lines={4} />}
+            {GROUP_ORDER.map((group) => (
+              <section key={group.key} className="card needs-group" aria-labelledby={`needs-h-${group.key}`}>
+                <h2 id={`needs-h-${group.key}`}>{group.label}</h2>
+                {group.fields.map((key) => {
+                  const f = byKey[key]
+                  if (!f) return null
+                  const label = f.label ?? FIELD_LABELS[key]
+                  if (f.type === 'bool') {
+                    return (
+                      <div key={key} className="field needs-bool">
+                        <label>
+                          <input
+                            type="checkbox" role="switch" aria-checked={!!draft[key]}
+                            checked={!!draft[key]} onChange={(e) => setField(key, e.target.checked)}
+                          />
+                          {label}
+                        </label>
+                        <details><summary>Co to znaczy?</summary><p>{HINTS[key]}</p></details>
+                      </div>
+                    )
+                  }
+                  return (
+                    <div key={key} className="field">
+                      <label htmlFor={`needs-${key}`}>{label}</label>
+                      <NumberField field={key} value={draft[key]} onChange={(v) => setField(key, v)} />
+                      <details><summary>Co to znaczy?</summary><p>{HINTS[key]}</p></details>
+                    </div>
+                  )
+                })}
+              </section>
+            ))}
+          </div>
 
-        <div className="needs-sticky">
-          <button type="submit" className="btn btn--primary btn--block">Zapisz ustawienia</button>
-        </div>
-        <p aria-live="polite" className="needs-confirm" tabIndex={-1} ref={confirmRef}>
-          {saved ? 'Zapisano. Ustawienia działają już przy wyszukiwaniu miejsc i tras.' : ''}
-        </p>
-      </form>
+          <div className="needs-sticky">
+            <button type="submit" className="btn btn--primary btn--block">Zapisz ustawienia</button>
+          </div>
+          <p aria-live="polite" className="needs-confirm" tabIndex={-1} ref={confirmRef}>
+            {saved ? 'Zapisano. Ustawienia działają już przy wyszukiwaniu miejsc i tras.' : ''}
+          </p>
+        </form>
+
+        <aside className="needs-preview" aria-labelledby="needs-preview-h">
+          <h2 id="needs-preview-h">Podgląd z Twoimi ustawieniami</h2>
+          <p><strong>Sukiennice (przykład)</strong></p>
+          {preview?.summary && <MatchSummary summary={preview.summary} />}
+          <p><Link to="/miejsce/5">Zobacz pełną kartę</Link></p>
+          <p aria-live="polite">
+            {preview?.summary
+              ? `Podgląd zaktualizowany: ${preview.summary.match} pasuje, ${preview.summary.barrier} ${plural(preview.summary.barrier, 'bariera', 'bariery', 'barier')}, ${preview.summary.unknown} brak danych.`
+              : 'Wczytywanie podglądu…'}
+          </p>
+        </aside>
+      </div>
 
       <section className="card" aria-labelledby="needs-sync-h">
         <h2 id="needs-sync-h">Synchronizacja między urządzeniami (opcjonalnie)</h2>
