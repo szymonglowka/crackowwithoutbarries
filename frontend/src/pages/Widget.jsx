@@ -45,7 +45,7 @@ export default function Widget() {
     .slice(0, 4)
 
   return (
-    <div className="widget">
+    <main className="widget">
       <p className="widget__brand">BezProgu · Kraków bez barier</p>
       {failed && <p className="notice notice--warning">Nie udało się pobrać danych.</p>}
       {!place && !failed && <p role="status">Wczytywanie…</p>}
@@ -80,6 +80,6 @@ export default function Widget() {
           </a>
         </>
       )}
-    </div>
+    </main>
   )
 }
