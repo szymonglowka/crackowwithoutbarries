@@ -5,8 +5,8 @@ import './ResultCard.css'
 
 const RELIABILITY_SHORT = {
   confirmed: 'potwierdzone',
-  open_data: 'otwarte dane',
-  user_report: 'zgłoszenie',
+  open_data: 'z otwartych danych',
+  user_report: 'zgłoszenie użytkownika',
   conflicting: 'dane sprzeczne',
   outdated: 'może być nieaktualne',
   missing: 'brak danych',
