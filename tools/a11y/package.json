@@ -1,0 +1,13 @@
+{
+  "name": "bezprogu-a11y-audit",
+  "private": true,
+  "type": "module",
+  "description": "Accessibility and UX audit of the running app (axe-core + extra checks)",
+  "scripts": {
+    "audit": "node audit.mjs"
+  },
+  "dependencies": {
+    "axe-core": "^4.10.0",
+    "puppeteer-core": "^24.0.0"
+  }
+}

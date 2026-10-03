@@ -7,6 +7,9 @@ user's own needs profile.
 
 **Priority: a working demo, fast.** Prefer simple, working code over abstractions. Hackathon rules apply.
 
+> **Current round: UX/UI + accessibility (agents U1–U4).** Read `docs/agents/ux/README.md` first —
+> its file-ownership table **replaces** the A1–A4 table below for this round.
+
 ## Run
 
 ```bash
