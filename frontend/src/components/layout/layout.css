@@ -25,12 +25,12 @@ main:focus { outline: none; }
 .site-footer { background: var(--color-surface); padding: var(--space-4) 0 calc(var(--bottom-nav-h) + var(--space-4)); margin-top: var(--space-5); }
 .site-footer summary { min-height: var(--tap); display: flex; align-items: center; font-weight: 700; cursor: pointer; }
 .site-footer ul { list-style: none; padding: 0 0 var(--space-2); margin: 0; }
-.site-footer li a { display: inline-flex; min-height: var(--tap); align-items: center; }
+.site-footer li a { display: inline-flex; min-height: var(--tap); min-width: var(--tap); align-items: center; }
 
 @media (min-width: 1024px) {
   .menu-button, .bottom-nav { display: none; }
   .desktop-nav { display: flex; gap: var(--space-3); align-items: center; }
-  .desktop-nav a:not(.btn) { min-height: var(--tap); display: inline-flex; align-items: center; }
+  .desktop-nav a:not(.btn) { min-height: var(--tap); min-width: var(--tap); display: inline-flex; align-items: center; }
   .desktop-nav a[aria-current="page"] { font-weight: 700; }
   .site-footer { padding-bottom: var(--space-4); }
   .site-footer__sections { display: grid; grid-template-columns: repeat(4, 1fr); }
