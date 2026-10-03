@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useDocumentTitle } from '../hooks/useDocumentTitle.js'
 import { useMeta } from '../hooks/useMeta.js'
 import { getSources } from '../api/meta.js'
-import { ReliabilityBadge, formatDate } from '../components/Badges.jsx'
+import { formatDate } from '../components/Badges.jsx'
 import StatusIcon from '../components/StatusIcon.jsx'
 import { ErrorState, Loading } from '../components/PageStates.jsx'
 import './Data.css'
@@ -40,7 +40,6 @@ export default function Data() {
             <li key={r.key} className="card">
               <p><StatusIcon status={r.key} /> <strong>{r.label}</strong></p>
               <p>{r.description}</p>
-              <ReliabilityBadge status={r.key} />
             </li>
           ))}
         </ul>
