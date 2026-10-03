@@ -12,9 +12,12 @@ export default function Layout({ app = false }) {
   const { pathname } = useLocation()
 
   // On route change move focus to <main> so screen readers announce the new page.
-  const first = useRef(true)
+  // Compare with the previous path (not a "first render" flag): StrictMode runs
+  // effects twice in dev, which would steal focus from the skip link on page load.
+  const prevPath = useRef(pathname)
   useEffect(() => {
-    if (first.current) { first.current = false; return }
+    if (prevPath.current === pathname) return
+    prevPath.current = pathname
     window.scrollTo(0, 0)
     mainRef.current?.focus({ preventScroll: true })
   }, [pathname])
