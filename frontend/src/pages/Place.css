@@ -100,6 +100,9 @@
 }
 
 @media (min-width: 1024px) {
+  .place__layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: var(--space-5); align-items: start; }
+  .place__side { position: sticky; top: var(--space-4); }
+  .place__sticky { position: static; }   /* przycisk zgłoszenia nie wisi już nad treścią */
   .param-table tbody { display: table-row-group; }
   .param-table tr { display: table-row; }
   .param-table th,
