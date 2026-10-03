@@ -37,7 +37,12 @@ export default function Widget() {
   }, [id, preset, presets])
 
   const place = places[preset]
-  const topParams = (place?.groups ?? []).flatMap((g) => g.parameters).slice(0, 4)
+  // Show what matters for the chosen profile: barriers first, then unknowns, then matches
+  const rank = { barrier: 0, unknown: 1, match: 2 }
+  const topParams = (place?.groups ?? []).flatMap((g) => g.parameters)
+    .filter((p) => p.match in rank)
+    .sort((a, b) => rank[a.match] - rank[b.match])
+    .slice(0, 4)
 
   return (
     <div className="widget">
