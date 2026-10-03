@@ -139,6 +139,10 @@ export default function RoutePlanner() {
     fetchRoute(from, to, avoid)
   }
 
+  const submitAgain = () => {
+    if (from && to) fetchRoute(from, to, avoid)
+  }
+
   const toggleAvoid = (key) =>
     setAvoid((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]))
 
@@ -197,6 +201,8 @@ export default function RoutePlanner() {
               <div className="notice notice--warning" ref={errorRef} tabIndex={-1} role="alert">
                 <strong>Usługa wyznaczania tras jest chwilowo niedostępna.</strong>
                 <p>Spróbuj ponownie za chwilę albo zadzwoń do miejsca docelowego i zapytaj o dojście bez schodów.</p>
+                <p>Przy pierwszym uruchomieniu serwis tras przygotowuje mapę (kilka minut).</p>
+                <button type="button" className="btn" onClick={submitAgain}>Spróbuj ponownie</button>
               </div>
             )}
             {state === 'offline' && (
