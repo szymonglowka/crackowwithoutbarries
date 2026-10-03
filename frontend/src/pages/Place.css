@@ -16,9 +16,6 @@
   margin-bottom: var(--space-3);
 }
 .place__group > summary {
-  min-height: var(--tap);
-  display: flex;
-  align-items: center;
   padding: var(--space-2) var(--space-3);
   font-weight: 700;
   cursor: pointer;
@@ -64,9 +61,6 @@
   margin-top: var(--space-1);
 }
 .param__more > summary {
-  min-height: var(--tap);
-  display: inline-flex;
-  align-items: center;
   cursor: pointer;
   color: var(--color-primary);
   font-weight: 600;
@@ -79,9 +73,6 @@
   margin: var(--space-4) 0;
 }
 .place__map > summary {
-  min-height: var(--tap);
-  display: inline-flex;
-  align-items: center;
   cursor: pointer;
   font-weight: 700;
 }
