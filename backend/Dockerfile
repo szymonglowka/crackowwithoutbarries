@@ -14,5 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 EXPOSE 8000
-ENTRYPOINT ["sh", "./entrypoint.sh"]
+# entrypoint.sh is bind-mounted from the host checkout; strip Windows CR line endings at
+# runtime so a CRLF checkout still works ("set: Illegal option -").
+ENTRYPOINT ["sh", "-c", "tr -d '\\r' < ./entrypoint.sh > /tmp/entrypoint.sh && exec sh /tmp/entrypoint.sh \"$@\"", "entrypoint"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

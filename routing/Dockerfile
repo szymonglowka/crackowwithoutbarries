@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends wget ca-certifi
 WORKDIR /graphhopper
 RUN wget -q https://github.com/graphhopper/graphhopper/releases/download/${GH_VERSION}/graphhopper-web-${GH_VERSION}.jar -O graphhopper.jar
 COPY config.yml wheelchair.json start.sh ./
-RUN chmod +x start.sh
+# Strip Windows CR line endings in case the checkout converted them
+RUN sed -i 's/\r$//' start.sh && chmod +x start.sh
 EXPOSE 8989 8990
 ENTRYPOINT ["./start.sh"]

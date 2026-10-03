@@ -1,0 +1,17 @@
+# Normalize line endings: LF in the repository and in every checkout, including Windows
+# (core.autocrlf=true would otherwise turn shell scripts into CRLF, and `sh` then fails
+# with "set: Illegal option -" because it reads "set -e\r").
+* text=auto eol=lf
+
+# Files executed inside Linux containers must always be LF
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.pdf binary
+*.pptx binary
+*.pbf binary
+*.jar binary
