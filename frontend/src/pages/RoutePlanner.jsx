@@ -12,10 +12,10 @@ import RouteResult from '../components/route/RouteResult.jsx'
 import './RoutePlanner.css'
 
 const AVOID_OPTIONS = [
-  { key: 'cobblestone', label: 'kostka brukowa' },
-  { key: 'high_kerbs', label: 'wysokie krawężniki' },
-  { key: 'steep', label: 'strome podjazdy' },
-  { key: 'no_data', label: 'odcinki bez danych' },
+  { key: 'cobblestone', label: 'kostka brukowa', hint: 'zmienia przebieg trasy' },
+  { key: 'high_kerbs', label: 'wysokie krawężniki', hint: 'na razie tylko oznaczamy je w opisie trasy' },
+  { key: 'steep', label: 'strome podjazdy', hint: 'brak danych o nachyleniu — jeszcze nie uwzględniamy' },
+  { key: 'no_data', label: 'odcinki bez danych', hint: 'na razie tylko oznaczamy je w opisie trasy' },
 ]
 
 function parsePoint(raw) {
@@ -172,8 +172,10 @@ export default function RoutePlanner() {
                     type="checkbox"
                     checked={avoid.includes(o.key)}
                     onChange={() => toggleAvoid(o.key)}
+                    aria-describedby={`avoid-hint-${o.key}`}
                   />
                   {o.label}
+                  <span className="route-avoid__hint" id={`avoid-hint-${o.key}`}>{o.hint}</span>
                 </label>
               ))}
             </details>
