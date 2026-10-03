@@ -18,7 +18,7 @@ GH_PATH = {
         {"text": "Skręć w prawo w ul. Floriańską", "distance": 500, "interval": [1, 2]},
     ],
     "details": {
-        "surface": [[0, 1, "ASPHALT"], [1, 2, "SETT"]],
+        "surface": [[0, 1, "ASPHALT"], [1, 2, "COBBLESTONE"]],
         "smoothness": [[0, 2, "GOOD"]],
         "road_class": [[0, 2, "FOOTWAY"]],
     },
@@ -44,7 +44,7 @@ class RouteViewTests(TestCase):
         self.assertIn("bez schodów", route["summary_text"])
         self.assertEqual(route["geometry"][0], [50.0685, 19.9474])
         step = route["steps"][1]
-        self.assertEqual(step["surface"], "sett")
+        self.assertEqual(step["surface"], "cobblestone")
         self.assertEqual(step["surface_display"], "kostka brukowa")
         self.assertTrue(any(i["match"] == "barrier" for i in step["issues"]))
         self.assertEqual(route["summary"]["difficult_surface"], 1)

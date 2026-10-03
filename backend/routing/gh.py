@@ -14,19 +14,17 @@ NO_ROUTE = "Nie znaleźliśmy trasy bez barier między tymi punktami."
 
 # GraphHopper `surface` encoded values that are hard for wheelchairs/strollers.
 DIFFICULT_SURFACES = {
-    "SETT", "COBBLESTONE", "UNHEWN_COBBLESTONE", "GRAVEL",
+    "COBBLESTONE", "GRAVEL", "FINE_GRAVEL",
     "GROUND", "DIRT", "GRASS", "SAND",
 }
-BAD_SMOOTHNESS = {"BAD", "VERY_BAD", "HORRIBLE"}
+BAD_SMOOTHNESS = {"BAD", "VERY_BAD", "HORRIBLE", "VERY_HORRIBLE", "IMPASSABLE"}
 
 SURFACE_DISPLAY = {
     "ASPHALT": "asfalt",
     "CONCRETE": "beton",
     "PAVED": "utwardzona",
     "PAVING_STONES": "płyty chodnikowe",
-    "SETT": "kostka brukowa",
-    "COBBLESTONE": "bruk (kocie łby)",
-    "UNHEWN_COBBLESTONE": "bruk (kocie łby)",
+    "COBBLESTONE": "kostka brukowa",
     "GRAVEL": "żwir",
     "FINE_GRAVEL": "drobny żwir",
     "GROUND": "grunt",
@@ -34,9 +32,9 @@ SURFACE_DISPLAY = {
     "GRASS": "trawa",
     "SAND": "piasek",
     "WOOD": "drewno",
-    "METAL": "metal",
     "UNPAVED": "nieutwardzona",
     "COMPACTED": "utwardzony grunt",
+    "OTHER": "inna nawierzchnia",
 }
 
 
@@ -60,8 +58,8 @@ def build_custom_model(profile, avoid):
     cobble = avoid_cobblestone(profile, avoid)
     if cobble:
         priority.append({
-            "if": "surface == SETT || surface == COBBLESTONE || "
-                  "surface == UNHEWN_COBBLESTONE || surface == GRAVEL",
+            "if": "surface == COBBLESTONE || surface == GRAVEL || "
+                  "surface == FINE_GRAVEL",
             "multiply_by": "0.2",
         })
     model = {}
@@ -185,8 +183,10 @@ def translate_path(path, obstacles_for_step, route_id):
         a, b = ins["interval"]
         seg = coords[a:b + 1]
         geom = [[lat, lon] for lon, lat in seg]
-        surface = detail_at(details, "surface", a, b)
-        smooth = detail_at(details, "smoothness", a, b)
+        surface = (detail_at(details, "surface", a, b) or "").upper() or None
+        if surface == "MISSING":
+            surface = None
+        smooth = (detail_at(details, "smoothness", a, b) or "").upper() or None
         issues = []
         if not surface:
             issues.append({"type": "surface", "match": "unknown",
