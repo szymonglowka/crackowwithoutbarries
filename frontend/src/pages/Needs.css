@@ -28,7 +28,6 @@
 }
 .needs-bool input { width: 1.5rem; height: 1.5rem; accent-color: var(--color-primary); }
 .needs details summary {
-  min-height: var(--tap); display: inline-flex; align-items: center;
   color: var(--color-primary); cursor: pointer; font-weight: 600;
 }
 .needs-sticky {
