@@ -23,6 +23,17 @@ function countText(n) {
   return `Znaleziono ${n} ${plural(n, 'miejsce', 'miejsca', 'miejsc')}`
 }
 
+/** "Sukiennice (przykład): 3 bariery, 4 pasuje" — pinezka mówi o stanie. */
+function markerLabel(r) {
+  if (!r.summary) return r.name
+  const b = r.summary.barrier ?? 0
+  const m = r.summary.match ?? 0
+  const u = r.summary.unknown ?? 0
+  const parts = [`${b} ${plural(b, 'bariera', 'bariery', 'barier')}`, `${m} pasuje`]
+  if (u > 0) parts.push(`${u} brak danych`)
+  return `${r.name}: ${parts.join(', ')}`
+}
+
 export default function Search() {
   useDocumentTitle('Szukaj miejsca')
   const [params, setParams] = useSearchParams()
@@ -130,7 +141,7 @@ export default function Search() {
 
   const markers = fetch.results.slice(0, visible)
     .filter((r) => r.lat != null && r.lon != null)
-    .map((r) => ({ id: r.id, lat: r.lat, lon: r.lon, label: r.name, match: resultMatch(r) }))
+    .map((r) => ({ id: r.id, lat: r.lat, lon: r.lon, label: markerLabel(r), match: resultMatch(r) }))
   const selected = fetch.results.find((r) => r.id === selectedId)
 
   return (

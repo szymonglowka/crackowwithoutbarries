@@ -228,7 +228,7 @@ export default function Place() {
         <summary>Pokaż na mapie</summary>
         <Suspense fallback={<Loading lines={2} />}>
           <LazyMap
-            markers={place.lat != null ? [{ id: place.id, lat: place.lat, lon: place.lon, label: place.name }] : []}
+            markers={place.lat != null ? [{ id: place.id, lat: place.lat, lon: place.lon, label: `${place.name}: lokalizacja` }] : []}
             label={`Mapa: ${place.name}`}
           />
         </Suspense>
