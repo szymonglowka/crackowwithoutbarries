@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="170 40 380 625" role="img" aria-labelledby="t">
+  <title id="t">BezProgu</title>
+  <!-- Original BezProgu logo (stacked). Text keeps the Bahnschrift design with DIN-like
+       fallbacks; textLength keeps the wordmark exactly as wide as the mark on any system. -->
+  <path fill="#145000" fill-rule="evenodd" transform="translate(188.576757330766, 59.0640598344664)" d="M100.683 450.472L0.0626435 497.317C-0.166558 362.317 0.32424 235.597 0.0950384 100.597C-0.75576 93.3973 4.99344 83.3171 13.1426 80.3169C88.5891 54.7751 150.776 25.5733 226.222 0.0315712C233.396 -0.466652 241.649 4.97512 241.263 13.2969L242.703 167.508L100.743 126.277L100.683 450.472"/>
+  <path fill="#bde3b9" fill-rule="evenodd" transform="translate(289.484402873633, 149.167793805653)" d="M0 36.2891L218.115 0.124126C227.622 -1.16856 239.633 7.86158 239.715 16.6841L242.595 396.124C242.75 411.458 228.075 419.504 217.635 416.284L139.875 383.644L141.795 77.4041L0 36.2891"/>
+  <text x="187.92" y="644.06" textLength="344" lengthAdjust="spacingAndGlyphs" fill="#014432"
+        font-family="Bahnschrift, 'DIN Alternate', 'Arial Narrow', Arial, sans-serif" font-size="72" font-weight="700">BEZ<tspan fill="#a9d5a4">PROGU</tspan></text>
+</svg>

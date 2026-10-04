@@ -63,3 +63,5 @@
   min-height: 48px;
   font-weight: 700;
 }
+
+.widget__brand { display: flex; align-items: center; gap: var(--space-1); }

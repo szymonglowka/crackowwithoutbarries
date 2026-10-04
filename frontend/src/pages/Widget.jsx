@@ -46,7 +46,7 @@ export default function Widget() {
 
   return (
     <main className="widget">
-      <p className="widget__brand">BezProgu · Kraków bez barier</p>
+      <p className="widget__brand"><img src="/favicon.svg" alt="" width="16" height="22" /> BezProgu · Kraków bez barier</p>
       {failed && <p className="notice notice--warning">Nie udało się pobrać danych.</p>}
       {!place && !failed && <p role="status">Wczytywanie…</p>}
       {place && (

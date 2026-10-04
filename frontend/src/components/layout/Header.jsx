@@ -45,7 +45,10 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="container site-header__inner">
-        <Link to="/" className="logo">BezProgu<span className="visually-hidden">: strona główna</span></Link>
+        <Link to="/" className="logo">
+          <img src="/logo-horizontal.svg" alt="BezProgu" width="140" height="40" />
+          <span className="visually-hidden">: strona główna</span>
+        </Link>
 
         <nav className="desktop-nav" aria-label="Główna">
           {[...MENU_MAIN, ...MENU_INFO].map((item) => (
